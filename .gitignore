@@ -1,0 +1,15 @@
+/build/
+/target/
+.cproject
+.project
+.DS_Store
+.cmake
+.idea
+.ninja_deps
+.ninja_log
+build.ninja
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+.settings

@@ -1,0 +1,1 @@
+split physics and collision detection in different folders. Ideally split it in separate projects but geometry will be shared amongst them so may not be a good idea.
