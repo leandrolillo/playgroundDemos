@@ -14,17 +14,17 @@
 #define GL_SILENCE_DEPRECATION
 #include <OpenGLRunner.h>
 #include <AudioRunner.h>
-#include<renderers/SkyboxRenderer.h>
-#include<renderers/GridRenderer.h>
-#include<renderers/geometry/GeometryRenderer.h>
+#include<SkyboxRenderer.h>
+#include<GridRenderer.h>
+#include<GeometryRenderer.h>
 
 #include<Math3d.h>
 #include<forces/Gravity.h>
 
 #include<Geometry.h>
-#include"../geometry/intersection/CollisionTester.h"
+#include"CollisionTester.h"
 
-#include "base/BaseDemo.h"
+#include "BaseDemo.h"
 
 
 class CollisionDetectionDemoRunner;

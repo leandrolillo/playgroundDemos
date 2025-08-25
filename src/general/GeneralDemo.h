@@ -14,7 +14,7 @@
 
 #include<vector>
 
-#include "base/BaseDemo.h"
+#include "../base/BaseDemo.h"
 
 class GeneralDemoRunner: public BaseDemoRunner {
 private:
