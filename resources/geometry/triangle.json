@@ -1,0 +1,11 @@
+#this is a comment.
+{
+	vertices: [<-1.0f, -1.0f, 0.0f>,
+        <0.0f,  1.0f, 0.0f>, 
+        <1.0f, -1.0f, 0.0f>],
+	colors: [<1, 0, 0>, <0, 1, 0>, <0, 0, 1>],
+	textureCoordinates: [<0, 0>, <0.5, 1>, <1, 0>],
+	type: "triangles",
+	generateNormals: true,
+	generateIndexes: true
+}

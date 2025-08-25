@@ -1,0 +1,4 @@
+{
+	vertexShaders: ["shaders/light.vert"],
+	fragmentShaders: ["shaders/light.frag"],
+}

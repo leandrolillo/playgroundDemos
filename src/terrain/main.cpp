@@ -9,10 +9,11 @@
 
 
 int main(int argc, char** argv){
-	String repository = Paths::add(Paths::getDirname(argv[0]), "../../media"); //assumes executable lies in playground/target folder
+	String repository = Paths::add(Paths::getDirname(argv[0]), "resources"); //assumes executable lies in playground/target folder
+
 	PlaygroundTerrainDemo playground(repository);
 	playground.withName("Terrain Demo");
-	printf("\n\nRunning playground [%s]\n", playgroundName.c_str());
+	printf("\n\nRunning playground [%s]\n", playground.toString().c_str());
 	playground.run();
     printf("done\n");
     return 0;

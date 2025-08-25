@@ -1,0 +1,4 @@
+{
+	vertexShaders: ["shaders/textured.vertexShader.glsl"],
+	fragmentShaders: ["shaders/textured.fragmentShader.glsl"],
+}

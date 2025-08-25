@@ -9,7 +9,7 @@ FetchContent_MakeAvailable(playground)
 #add_subdirectory(inputController)
 
 add_subdirectory(general)
-add_subdirectory(collisionDetection)
+#add_subdirectory(collisionDetection)
 #add_subdirectory(physics)
 #add_subdirectory(terrain)
 #add_subdirectory(obj)

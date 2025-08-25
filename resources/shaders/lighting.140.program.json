@@ -1,0 +1,4 @@
+{
+	vertexShaders: ["shaders/lighting.140.vertexShader.glsl"],
+	fragmentShaders: ["shaders/lighting.140.fragmentShader.glsl"],
+}

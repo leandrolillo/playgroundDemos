@@ -1,0 +1,4 @@
+{
+	"vertexShaders": ["skybox.vertexShader.glsl"],
+	"fragmentShaders": ["skybox.fragmentShader.glsl"]
+}

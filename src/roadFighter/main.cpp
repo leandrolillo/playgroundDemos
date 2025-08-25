@@ -12,7 +12,7 @@ int main(int argc, char** argv){
 	String repository = Paths::add(Paths::getDirname(argv[0]), "../../media"); //assumes executable lies in playground/target folder
 	RoadFighterRunner playground(repository);
 	playground.withName("Road Fighter");
-	printf("\n\nRunning playground [%s]\n", playgroundName.c_str());
+	printf("\n\nRunning playground [%s]\n", playground.toString().c_str());
 	playground.run();
     printf("done\n");
     return 0;

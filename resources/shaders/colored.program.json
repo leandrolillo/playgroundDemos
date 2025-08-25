@@ -1,0 +1,4 @@
+{
+	vertexShaders: ["shaders/colored.vertexShader.glsl"],
+	fragmentShaders: ["shaders/colored.fragmentShader.glsl"],
+}

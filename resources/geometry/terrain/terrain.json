@@ -1,0 +1,8 @@
+{
+	"r": "~/images/terrain/mud.png",
+	"g": "~/images/terrain/grassFlowers.png",
+	"b": "~/images/terrain/path.png",
+	"a": "~/images/terrain/grassy2.png",
+	"map": "~/images/terrain/BlendMap.png",
+	"heightmap": "~/images/terrain/heightMap.png"
+}

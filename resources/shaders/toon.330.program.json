@@ -1,0 +1,3 @@
+{vertexShaders: ["toon.330.vertexShader.glsl"],
+fragmentShaders: ["toon.330.fragmentShader.glsl"],
+}
