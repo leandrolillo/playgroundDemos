@@ -19,11 +19,11 @@
 #include<renderers/SkyboxRenderer.h>
 #include<renderers/GridRenderer.h>
 
-#include<forces/Gravity.h>
+#include<Gravity.h>
 
 #include<Geometry.h>
 
-#include "base/BaseDemo.h"
+#include "../base/BaseDemo.h"
 
 constexpr unsigned int numberOfParticles = 60;
 

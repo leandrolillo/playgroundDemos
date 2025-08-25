@@ -8,8 +8,8 @@
 #ifndef SRC_BATTLEROAD_H_
 #define SRC_BATTLEROAD_H_
 
-#include "base/BaseDemo.h"
-#include <MeshResource.h> *
+#include "../base/BaseDemo.h"
+#include <MeshResource.h>
 
 class RoadFighterRunner: public BaseDemoRunner {
 //    ParticleManager particleManager;
@@ -107,7 +107,7 @@ public:
     }
 
     void onMouseMove(int x, int y, int dx, int dy, unsigned int buttons) override {
-    	const Uint8 *state = SDL_GetKeyboardState(NULL);
+    	const bool *state = SDL_GetKeyboardState(NULL);
 
     	if((buttons & SDL_BUTTON_MMASK) && state[SDL_SCANCODE_LSHIFT]) {
     		camera.setPosition(camera.getPosition() + vector(-dx, dy, 0.0) * 0.1f);

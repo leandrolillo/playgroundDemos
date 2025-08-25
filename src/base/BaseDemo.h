@@ -14,7 +14,7 @@
 #define GL_SILENCE_DEPRECATION
 #include <OpenGLRunner.h>
 #include <AudioRunner.h>
-#include<renderers/DefaultRenderer.h>
+#include<DefaultRenderer.h>
 #include<Camera.h>
 
 class BaseDemoRunner: public PlaygroundRunner {

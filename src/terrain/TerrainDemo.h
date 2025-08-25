@@ -8,24 +8,22 @@
 #ifndef SRC_DEMO_TERRAINDEMO_H_
 #define SRC_DEMO_TERRAINDEMO_H_
 
-#include<Playground.h>
-#include<OpenGLRunner.h>
-#include<AudioRunner.h>
+#include "../base/BaseDemo.h"
 
 #include<vector>
 
-#include<renderers/TerrainRenderer.h>
-#include<renderers/SkyboxRenderer.h>
-#include<renderers/geometry/GeometryRenderer.h>
+#include<TerrainRenderer.h>
+#include<SkyboxRenderer.h>
+#include<GeometryRenderer.h>
 
 
-#include "inputController/FPSInputController.h"
-#include "inputController/ThirdPersonInputController.h"
+#include "../inputController/FPSInputController.h"
+#include "../inputController/ThirdPersonInputController.h"
 
 #include<PhysicsRunner.h>
-#include<forces/Gravity.h>
+#include<Gravity.h>
 
-#include "base/BaseDemo.h"
+
 
 class TerrainFPSInputController : public FPSInputController {
 protected:

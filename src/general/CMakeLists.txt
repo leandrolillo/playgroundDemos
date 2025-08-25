@@ -5,7 +5,7 @@ add_executable(${MODULE_NAME} main.cpp)
 #sources
 target_include_directories(${MODULE_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(${MODULE_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../base)
-target_link_libraries(${MODULE_NAME} playground openGLRunner audioRunner Ogg::ogg)
+target_link_libraries(${MODULE_NAME} playground openGLRunner audioRunner)
 
 #resources
 add_custom_command( 

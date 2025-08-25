@@ -12,6 +12,7 @@
 #include <stdio.h>
 
 #define GL_SILENCE_DEPRECATION
+#include "../base/BaseDemo.h"
 #include <OpenGLRunner.h>
 #include <AudioRunner.h>
 #include<SkyboxRenderer.h>
@@ -19,12 +20,13 @@
 #include<GeometryRenderer.h>
 
 #include<Math3d.h>
-#include<forces/Gravity.h>
+#include<Gravity.h>
 
 #include<Geometry.h>
 #include"CollisionTester.h"
+#include "ParticleManager.h"
 
-#include "BaseDemo.h"
+
 
 
 class CollisionDetectionDemoRunner;
@@ -76,10 +78,6 @@ class CollisionDetectionDemoRunner: public BaseDemoRunner {
     SkyboxRenderer skyboxRenderer;
     GridRenderer gridRenderer;
     GeometryRenderer geometryRenderer;
-
-    MaterialResource red = MaterialResource(vector(1, 0, 0), vector(1, 0, 0), vector(1, 0, 0), 1.0, 0.2);
-    MaterialResource green = MaterialResource(vector(0, 1, 0), vector(0, 1, 0), vector(0, 1, 0), 1.0, 0.2);
-    MaterialResource blue = MaterialResource(vector(0, 0, 1), vector(0, 0, 1), vector(0, 0, 1), 1.0, 0.2);
 
 public:
     CollisionDetectionDemoRunner() : ground(new Plane(vector(0, 0, 0), vector(0, 1, 0))), geometryRenderer(defaultRenderer) {
@@ -172,9 +170,6 @@ public:
         particleManager.addParticle(collidingParticles.back().get());
 
 
-        geometryRenderer.setCollidingParticleBMaterial(&blue);
-
-
         reset();
 
         logger->debug("Completed initialization");
@@ -192,7 +187,7 @@ public:
         particleManager.detectCollisions();
         std::vector<ParticleContact> contacts = particleManager.getContacts();
 
-        geometryRenderer.render(&particleManager);
+        renderParticleManager(&particleManager);
         geometryRenderer.render(&anotherCamera.getFrustum());
 
         defaultRenderer.render(camera);
@@ -201,6 +196,51 @@ public:
 
         return LoopResult::CONTINUE;
     }
+
+    const MaterialResource red = MaterialResource(vector(1, 0, 0), vector(1, 0, 0), vector(1, 0, 0), 1.0, 0.5);
+    const MaterialResource green = MaterialResource(vector(0, 1, 0), vector(0, 1, 0), vector(0, 1, 0), 0.5);
+    const MaterialResource blue = MaterialResource(vector(0, 0, 1), vector(0, 0, 1), vector(0, 0, 1), 0.5);
+    const MaterialResource black {vector(0, 0, 0), vector(0, 0, 0), vector(0, 0, 0), 1.0, 0.2 };
+    const MaterialResource white {vector(1, 1, 1), vector(1, 1, 1), vector(1, 1, 1), 1.0, 0.2 };
+
+    void renderParticleManager(const ParticleManager *particleManager) {
+      defaultRenderer.setMaterial(&green);
+      for(auto &contact : particleManager->getContacts()) {
+        renderContact(contact);
+      }
+
+      defaultRenderer.setMaterial(&white);
+      for(auto scenery : particleManager->getScenery()) {
+        geometryRenderer.render(scenery);
+      }
+
+      for(auto particle : particleManager->getParticles()) {
+        if(particle->getStatus()) {
+          defaultRenderer.setMaterial(&black);
+          bool isColliding = false;
+          for(auto &contact : particleManager->getContacts()) {
+            if(contact.getParticleA() == particle) {
+              defaultRenderer.setMaterial(&red);
+              break;
+
+            } else if (contact.getParticleB() ==  particle) {
+              defaultRenderer.setMaterial(&blue);
+              break;
+            }
+          }
+
+
+          geometryRenderer.render(particle->getBoundingVolume(), isColliding);
+        }
+      }
+    }
+
+    void renderContact(const ParticleContact &contact) {
+          vector start = contact.getIntersection(); //contact.getParticleA()->getPosition();
+          vector end = start + contact.getNormal() * contact.getPenetration();
+          defaultRenderer.drawLine(matriz_4x4::identidad, start, end);
+    }
+
 
 //    void onCollision(CollidingParticle *sphereParticle) {
 //        //sphereParticle->setIsColliding(true);

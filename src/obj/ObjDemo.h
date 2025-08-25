@@ -15,7 +15,7 @@
 #include <OpenGLRunner.h>
 #include<renderers/GridRenderer.h>
 
-#include "base/BaseDemo.h"
+#include "../base/BaseDemo.h"
 
 class ObjDemoRunner: public BaseDemoRunner {
 	LightResource light;
