@@ -4,10 +4,6 @@
  *  Created on: Mar 22, 2021
  *      Author: leandro
  */
-
-#ifndef SRC_PHYSICSDEMO_H_
-#define SRC_PHYSICSDEMO_H_
-
 #include <iostream>
 #include <stdio.h>
 
@@ -83,8 +79,8 @@ public:
 	                        aabbPlatform(new AABB(vector(0.0, 1.0, 0.0), vector(0.5, 0.05, 0.05))) {
 	}
 
-    bool init() override {
-    	BaseDemoRunner::init();
+    bool initialize() override {
+    	BaseDemoRunner::initialize();
 
         physics = (PhysicsRunner *)this->getContainer()->getRequiredRunner(PhysicsRunner::ID);
         //physics->setPlaybackSpeed(0.3);
@@ -265,8 +261,8 @@ public:
 	PhysicsPlayground(const String &resourcesBasePath) :
 			Playground(resourcesBasePath) {
 	}
-	void init() override {
-		Playground::init();
+	void initializePlayground() override {
+		Playground::initializePlayground();
 		this->addRunner(new OpenGLRunner());
 		this->addRunner(new AudioRunner());
 		this->addRunner(new PhysicsRunner());
@@ -291,7 +287,12 @@ void BulletParticle::onCollisionResolved(const ParticleContact &contact) {
 
 }
 
-
-
-
-#endif /* SRC_PHYSICSDEMO_H_ */
+int main(int argc, char** argv){
+  String repository = Paths::add(Paths::getDirname(argv[0]), "resources"); //assumes executable lies in playground/target folder
+  PhysicsPlayground playground(repository);
+  playground.withName("PhysicsDemo");
+  printf("\n\nRunning playground [%s]\n", playground.toString().c_str());
+  playground.run();
+    printf("done\n");
+    return 0;
+}

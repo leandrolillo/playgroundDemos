@@ -1,6 +1,6 @@
 #executable
 set(MODULE_NAME roadFighter)
-add_executable(${MODULE_NAME} main.cpp)
+add_executable(${MODULE_NAME} RoadFighter.cpp)
 
 #sources
 target_include_directories(${MODULE_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})

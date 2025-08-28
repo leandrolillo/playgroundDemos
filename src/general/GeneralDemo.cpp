@@ -4,10 +4,6 @@
  *  Created on: Mar 19, 2021
  *      Author: leandro
  */
-
-#ifndef SRC_GENERALDEMO_H_
-#define SRC_GENERALDEMO_H_
-
 #include<Playground.h>
 #include<OpenGLRunner.h>
 #include<AudioRunner.h>
@@ -56,8 +52,8 @@ public:
     camera.setPosition(viewPosition);
   }
 
-  virtual bool init() override {
-    BaseDemoRunner::init();
+  virtual bool initialize() override {
+    BaseDemoRunner::initialize();
 
     // demo stuff
     lightAnnoyingSoundSource = audio->createSource("audio/voltage.wav");
@@ -199,8 +195,8 @@ public:
   PlaygroundGeneralDemo(const String &resourcesBasePath) :
       Playground(resourcesBasePath) {
   }
-  void init() override {
-    Playground::init();
+  void initializePlayground() override {
+    Playground::initializePlayground();
     this->addRunner(new GeneralDemoRunner());
     this->addRunner(new OpenGLRunner());
     this->addRunner(new AudioRunner());
@@ -208,4 +204,14 @@ public:
   }
 };
 
-#endif /* SRC_GENERALDEMO_H_ */
+int main(int argc, char** argv){
+  String repository = Paths::add(Paths::getDirname(argv[0]), "resources"); //assumes executable lies in playground/target folder
+  PlaygroundGeneralDemo playground(repository);
+  playground.withName("GeneralDemo");
+  printf("\n\nRunning playground [%s]\n", playground.toString().c_str());
+  playground.run();
+    printf("done\n");
+    return 0;
+}
+
+

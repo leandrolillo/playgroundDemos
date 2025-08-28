@@ -1,6 +1,6 @@
 #executable
 set(MODULE_NAME objDemo)
-add_executable(${MODULE_NAME} main.cpp)
+add_executable(${MODULE_NAME} ObjDemo.cpp)
 
 #sources
 target_include_directories(${MODULE_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})

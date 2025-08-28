@@ -5,7 +5,6 @@ FetchContent_Declare(
     GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(playground)
 
-
 add_subdirectory(general)
 add_subdirectory(collisionDetection)
 add_subdirectory(physics)

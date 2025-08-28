@@ -43,7 +43,7 @@ public:
         camera.setPerspectiveProjectionFov(45.0, (double) width / (double) height, 2, 300.0);
     }
 
-    virtual bool init() override {
+    virtual bool initialize() override {
         video = (VideoRunner*) this->getContainer()->getRequiredRunner(VideoRunner::ID);
         audio = (AudioRunner*) this->getContainer()->getRequiredRunner(AudioRunner::ID);
 

@@ -4,10 +4,6 @@
  *  Created on: Mar 22, 2021
  *      Author: leandro
  */
-
-#ifndef SRC_COLDETDEMO_H_
-#define SRC_COLDETDEMO_H_
-
 #include <iostream>
 #include <stdio.h>
 
@@ -131,8 +127,8 @@ public:
         ground.setInverseMass((real)0);
     }
 
-    bool init() override {
-    	BaseDemoRunner::init();
+    bool initialize() override {
+    	BaseDemoRunner::initialize();
 
         this->video->resize(800, 600);
 
@@ -392,12 +388,20 @@ class CollisionDetectionPlayground: public Playground {
 public:
     CollisionDetectionPlayground(const String &resourcesBasePath) : Playground(resourcesBasePath) {
     }
-    void init() override {
-        Playground::init();
+    void initializePlayground() override {
+        Playground::initializePlayground();
         this->addRunner(new OpenGLRunner());
         this->addRunner(new AudioRunner());
         this->addRunner(new CollisionDetectionDemoRunner());
     }
 };
 
-#endif
+int main(int argc, char** argv){
+  String repository = Paths::add(Paths::getDirname(argv[0]), "resources"); //assumes executable lies in playground/target folder
+  CollisionDetectionPlayground playground(repository);
+  playground.withName("Collision detection demo");
+  printf("\n\nRunning playground [%s]\n", playground.toString().c_str());
+  playground.run();
+    printf("done\n");
+    return 0;
+}

@@ -5,9 +5,6 @@
  *      Author: leandro
  */
 
-#ifndef SRC_DEMO_TERRAINDEMO_H_
-#define SRC_DEMO_TERRAINDEMO_H_
-
 #include "../base/BaseDemo.h"
 
 #include<vector>
@@ -148,8 +145,8 @@ public:
         camera.setPerspectiveProjectionFov(45.0, (GLfloat) width / (GLfloat) height, 0.1, 600.0);
     }
 
-    virtual bool init() override {
-    	if(!BaseDemoRunner::init()) {
+    virtual bool initialize() override {
+    	if(!BaseDemoRunner::initialize()) {
     		return false;
     	}
 
@@ -389,8 +386,8 @@ public:
 	PlaygroundTerrainDemo(const String &resourcesBasePath) :
 			Playground(resourcesBasePath) {
 	}
-	void init() override {
-		Playground::init();
+	void initializePlayground() override {
+		Playground::initializePlayground();
 		this->addRunner(new OpenGLRunner());
 		this->addRunner(new AudioRunner());
         this->addRunner(new PhysicsRunner());
@@ -398,5 +395,13 @@ public:
 	}
 };
 
+int main(int argc, char** argv){
+  String repository = Paths::add(Paths::getDirname(argv[0]), "resources"); //assumes executable lies in playground/target folder
 
-#endif /* SRC_DEMO_TERRAINDEMO_H_ */
+  PlaygroundTerrainDemo playground(repository);
+  playground.withName("Terrain Demo");
+  printf("\n\nRunning playground [%s]\n", playground.toString().c_str());
+  playground.run();
+    printf("done\n");
+    return 0;
+}

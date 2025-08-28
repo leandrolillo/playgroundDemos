@@ -4,10 +4,6 @@
  *  Created on: Mar 22, 2021
  *      Author: leandro
  */
-
-#ifndef SRC_OBJDEMO_H_
-#define SRC_OBJDEMO_H_
-
 #include <iostream>
 #include <stdio.h>
 
@@ -42,8 +38,8 @@ public:
         camera.setPosition(vector(0.0f, 0.0f, 5.0f));
 	}
 
-	bool init() override {
-		BaseDemoRunner::init();
+	bool initialize() override {
+		BaseDemoRunner::initialize();
 
 		gridRenderer.setVideoRunner(video);
 	    defaultRenderer.setLight(&light);
@@ -117,14 +113,20 @@ public:
     ObjDemoPlayground(const String &resourcesBasePath) :
 			Playground(resourcesBasePath) {
 	}
-	void init() override {
-		Playground::init();
+	void initializePlayground() override {
+		Playground::initializePlayground();
 		this->addRunner(new OpenGLRunner());
 		this->addRunner(new AudioRunner());
 		this->addRunner(new ObjDemoRunner());
 	}
 };
 
-
-
-#endif /* SRC_OBJDEMO_H_ */
+int main(int argc, char** argv){
+  String repository = Paths::add(Paths::getDirname(argv[0]), "resources"); //assumes executable lies in playground/target folder
+  ObjDemoPlayground playground(repository);
+  playground.withName("ObjDemoPlayground");
+  printf("\n\nRunning playground [%s]\n", playground.toString().c_str());
+  playground.run();
+    printf("done\n");
+    return 0;
+}
