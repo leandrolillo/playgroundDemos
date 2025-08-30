@@ -252,7 +252,7 @@ public:
             Line line(camera.getPosition(),
                     camera.getRayDirection((unsigned int) x, (unsigned int) y, video->getScreenWidth(), video->getScreenHeight()));
 
-            if (!equalsZero(line.getDirection().z)) {
+            if (!equalsZeroAbsoluteMargin(line.getDirection().z)) {
                 for(auto &particle : collidingParticles) {
 
                 if (particle->isSelected()) {
