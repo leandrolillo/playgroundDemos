@@ -52,7 +52,7 @@ public:
         camera.setViewMatrix(matriz_4x4::traslacion(vector(0.0f, -0.5f, -10.0f)));
 
         logger->debug("Initializing renderers");
-        defaultRenderer.setVideoRunner(video);
+        defaultRenderer.setVideoRunner(*video);
 
         logger->debug("Setting up video %d", video);
         video->setClearColor(0.0, 0.5, 0.0, 0.0);

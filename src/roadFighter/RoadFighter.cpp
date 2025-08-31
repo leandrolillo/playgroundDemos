@@ -37,25 +37,25 @@ public:
      * json -> vertex array
      */
 
-//        if((axesVertexArray = (VertexArrayResource *)this->getResourceManager()->load("roadFighter/axes.obj", MimeTypes::VERTEXARRAY)) == null) {
+//        if((axesVertexArray = (VertexArrayResource *)this->getResourceManager().load("roadFighter/axes.obj", MimeTypes::VERTEXARRAY)) == null) {
 //        	logger->error("Could not load axes model");
 //        	return false;
 //        }
 //
-//        if((carVertexArray = (VertexArrayResource *)this->getResourceManager()->load("roadFighter/corvette.obj", MimeTypes::VERTEXARRAY)) == null) {
+//        if((carVertexArray = (VertexArrayResource *)this->getResourceManager().load("roadFighter/corvette.obj", MimeTypes::VERTEXARRAY)) == null) {
 //        	logger->error("Could not load car model");
 //        	return false;
 //        }
 //    	MeshCollection *meshCollection;
 //
-//        if((meshCollection = (MeshResource *)this->getResourceManager()->load("roadFighter/axes.obj",
+//        if((meshCollection = (MeshResource *)this->getResourceManager().load("roadFighter/axes.obj",
 //        		MimeTypes::MESHCOLLECTION,
 //				std::set<String> {},
 //				std::map<String, String> {{"texture-filter", "nearest"}})) == null) {
 //        	logger->error("Could not load mesh collection");
 //        	return false;
 //        }
-    if ((carMesh = (MeshResource*) this->getResourceManager()->load(
+    if ((carMesh = (MeshResource*) this->getResourceManager().load(
         "roadFighter/corvette.obj/chevrolet_corvete", MimeTypes::MESH,
         std::set<String> { }, std::map<String, String> { { "texture-filter",
             "nearest" } })) == null) {
@@ -63,7 +63,7 @@ public:
       return false;
     }
 
-    if ((texturedBoxMesh = (MeshResource*) this->getResourceManager()->load(
+    if ((texturedBoxMesh = (MeshResource*) this->getResourceManager().load(
         "roadFighter/texturedCube.obj/Cube", MimeTypes::MESH,
         std::set<String> { }, std::map<String, String> { { "texture-filter",
             "nearest" } })) == null) {
@@ -71,7 +71,7 @@ public:
       return false;
     }
 
-    if ((axesMesh = (MeshResource*) this->getResourceManager()->load(
+    if ((axesMesh = (MeshResource*) this->getResourceManager().load(
         "roadFighter/axes.obj/Axes", MimeTypes::MESH, std::set<String> { },
         std::map<String, String> { { "texture-filter", "nearest" } })) == null) {
       logger->error("Could not load axes model");

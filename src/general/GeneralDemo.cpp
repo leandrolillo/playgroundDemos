@@ -36,7 +36,7 @@ private:
   LightResource light;
 
   DefaultRenderer toonRenderer;
-public:
+  public:
   GeneralDemoRunner() :
       material(vector(1.0f, 0.5f, 0.31f), vector(1.0f, 0.5f, 0.31f),
           vector(0.5f, 0.5f, 0.5f), 32.0f), light(lightPosition,
@@ -59,26 +59,19 @@ public:
     lightAnnoyingSoundSource = audio->createSource("audio/voltage.wav");
     audio->playSource(lightAnnoyingSoundSource);
 
-    pngTexture = (TextureResource*) getResourceManager()->load(
-        "images/TEXTURA.PNG", MimeTypes::TEXTURE);
-    pngTexture2 = (TextureResource*) getResourceManager()->load(
-        "images/CEDFENCE.PNG", MimeTypes::TEXTURE);
-    jpgTexture = (TextureResource*) getResourceManager()->load("images/irs.JPG",
-        MimeTypes::TEXTURE);
+    pngTexture = (TextureResource*) getResourceManager().load("images/TEXTURA.PNG", MimeTypes::TEXTURE);
+    pngTexture2 = (TextureResource*) getResourceManager().load("images/CEDFENCE.PNG", MimeTypes::TEXTURE);
+    jpgTexture = (TextureResource*) getResourceManager().load("images/irs.JPG", MimeTypes::TEXTURE);
 
-    sphereVertexArray = (VertexArrayResource*) getResourceManager()->load(
-        "geometry/sphere.json", MimeTypes::VERTEXARRAY);
-    triangleVertexArray = (VertexArrayResource*) getResourceManager()->load(
-        "geometry/triangle.json", MimeTypes::VERTEXARRAY);
+    sphereVertexArray = (VertexArrayResource*) getResourceManager().load("geometry/sphere.json", MimeTypes::VERTEXARRAY);
+    triangleVertexArray = (VertexArrayResource*) getResourceManager().load("geometry/triangle.json", MimeTypes::VERTEXARRAY);
 
     defaultRenderer.setLight(&light);
 //        defaultRenderer.setMaterial(&material);
 //        defaultRenderer.setTexture(pngTexture);
 
-    toonRenderer.setShaderProgram(
-        (ShaderProgramResource*) getResourceManager()->load(
-            "shaders/toon.330.program.json", MimeTypes::SHADERPROGRAM));
-    toonRenderer.setVideoRunner(video);
+    toonRenderer.setShaderProgram((ShaderProgramResource*) getResourceManager().load("shaders/toon.330.program.json", MimeTypes::SHADERPROGRAM));
+    toonRenderer.setVideoRunner(*video);
     toonRenderer.setLight(&light);
     toonRenderer.setMaterial(&material);
     toonRenderer.setTexture(pngTexture);
@@ -95,7 +88,7 @@ public:
     /**
      * Update audio
      */
-    if(lightAnnoyingSoundSource != null) {
+    if (lightAnnoyingSoundSource != null) {
       lightAnnoyingSoundSource->setPosition(
           vector3(lightPosition.x, lightPosition.y, -lightPosition.z));
       audio->updateSource(lightAnnoyingSoundSource);
@@ -172,7 +165,7 @@ public:
   virtual void onKeyUp(unsigned int key, unsigned int keyModifier) override {
     switch (key) {
     case SDLK_RCTRL:
-    case SDLK_LCTRL:
+      case SDLK_LCTRL:
       currentPosition = &viewPosition;
       break;
     }
@@ -180,7 +173,7 @@ public:
   virtual void onKeyDown(unsigned int key, unsigned int keyModifier) override {
     switch (key) {
     case SDLK_RCTRL:
-    case SDLK_LCTRL:
+      case SDLK_LCTRL:
       currentPosition = &lightPosition;
       break;
     case SDLK_SPACE:
@@ -204,14 +197,13 @@ public:
   }
 };
 
-int main(int argc, char** argv){
+int main(int argc, char **argv) {
   String repository = Paths::add(Paths::getDirname(argv[0]), "resources"); //assumes executable lies in playground/target folder
   PlaygroundGeneralDemo playground(repository);
   playground.withName("GeneralDemo");
   printf("\n\nRunning playground [%s]\n", playground.toString().c_str());
   playground.run();
-    printf("done\n");
-    return 0;
+  printf("done\n");
+  return 0;
 }
-
 

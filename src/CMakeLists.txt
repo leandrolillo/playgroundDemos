@@ -1,7 +1,7 @@
 FetchContent_Declare(
     playground
     GIT_REPOSITORY https://github.com/leandrolillo/playground.git
-    GIT_TAG master
+    GIT_TAG RemoveResourceLoadResponse
     GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(playground)
 

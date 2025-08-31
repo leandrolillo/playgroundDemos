@@ -133,7 +133,7 @@ public:
         this->video->resize(800, 600);
 
         logger->debug("Initializing renderers");
-        gridRenderer.setVideoRunner(video);
+        gridRenderer.setVideoRunner(*video);
 //	    skyboxRenderer.setVideoRunner(video);
 //	    skyboxRenderer.setSize(200);
 
