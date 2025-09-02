@@ -12,8 +12,8 @@
 #include <AudioRunner.h>
 #include<PhysicsRunner.h>
 
-#include<renderers/SkyboxRenderer.h>
-#include<renderers/GridRenderer.h>
+#include<SkyboxRenderer.h>
+#include<GridRenderer.h>
 
 #include<Gravity.h>
 

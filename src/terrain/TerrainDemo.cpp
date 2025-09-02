@@ -6,18 +6,18 @@
  */
 
 #include "../base/BaseDemo.h"
+#include<PhysicsRunner.h>
 
 #include<vector>
 
 #include<TerrainRenderer.h>
 #include<SkyboxRenderer.h>
-#include<GeometryRenderer.h>
 
-#include "../inputController/FPSInputController.h"
-#include "../inputController/ThirdPersonInputController.h"
-
-#include<PhysicsRunner.h>
 #include<Gravity.h>
+#include "../base/FPSInputController.h"
+#include "../base/ThirdPersonInputController.h"
+#include "../base/ParticleManagerRenderer.h"
+#include "Particle.h"
 
 class TerrainFPSInputController: public FPSInputController {
 protected:
@@ -79,6 +79,8 @@ protected:
   }
 };
 
+constexpr unsigned int numberOfParticles = 60;
+
 class TerrainDemoRunner: public BaseDemoRunner {
 private:
   /**
@@ -106,7 +108,8 @@ private:
 
   TerrainRenderer terrainRenderer;
   SkyboxRenderer skyboxRenderer;
-  GeometryRenderer geometryRenderer;
+  ParticleManagerRenderer particleManagerRenderer;
+
 
   VertexArrayResource *tree = null;
   TextureResource *treeTexture = null;
@@ -116,7 +119,7 @@ private:
   TerrainResource *terrain = null;
   std::unique_ptr<HierarchicalGeometry> terrainBoundingVolume;
 
-  std::vector<std::unique_ptr<BulletParticle>> particles;
+  std::vector<std::unique_ptr<Particle>> particles;
   Gravity gravity = Gravity(vector(0.0, -9.8, 0.0));
 
   MaterialResource black { vector(0, 0, 0), vector(0, 0, 0), vector(0, 0, 0), 1.0, 0.2 };
@@ -133,7 +136,7 @@ public:
       vector(0.1f, 0.1f, 0.1f), 1.0f),
       fpsInputController(camera, playerTransform),
       thirdPersonController(camera, playerTransform),
-      geometryRenderer(defaultRenderer) {
+      particleManagerRenderer(defaultRenderer){
   }
 
   virtual void onResize(unsigned int height, unsigned int width) override {
@@ -192,12 +195,12 @@ public:
         terrain->getHeightMap()->getHeight() * 0.5,
         terrain->getHeightMap()->getDepth() * 0.5);
 
-    terrainBoundingVolume->addChildren(new HeightMapGeometry(vector(0, 0, 0), terrain->getHeightMap()));
-    terrainBoundingVolume->addChildren(new HeightMapGeometry(vector(-terrain->getHeightMap()->getWidth(), 0, 0), terrain->getHeightMap()));
-    terrainBoundingVolume->addChildren(new HeightMapGeometry(vector(0, 0, -terrain->getHeightMap()->getDepth()), terrain->getHeightMap()));
+    terrainBoundingVolume->addChildren(new HeightMapGeometry(vector(0, 0, 0), *terrain->getHeightMap()));
+    terrainBoundingVolume->addChildren(new HeightMapGeometry(vector(-terrain->getHeightMap()->getWidth(), 0, 0), *terrain->getHeightMap()));
+    terrainBoundingVolume->addChildren(new HeightMapGeometry(vector(0, 0, -terrain->getHeightMap()->getDepth()), *terrain->getHeightMap()));
     terrainBoundingVolume->addChildren(
         new HeightMapGeometry(vector(-terrain->getHeightMap()->getWidth(), 0, -terrain->getHeightMap()->getDepth()),
-            terrain->getHeightMap()));
+            *terrain->getHeightMap()));
 
     skyboxRenderer.setVideoRunner(*video);
     skyboxRenderer.setSize(300);
@@ -206,7 +209,7 @@ public:
     physics->getParticleManager()->addScenery(terrainBoundingVolume.get());
 
     for (int index = 0; index < numberOfParticles; index++) {
-      particles.push_back(std::unique_ptr < BulletParticle > (new BulletParticle()));
+      particles.push_back(std::make_unique<Particle>(new Sphere(vector(0, 0, 0), 0.1)));
       particles.back()->setStatus(false);
       //particles.back()->setRunner(this);
 
@@ -256,7 +259,7 @@ public:
       for (auto &particle : this->particles)
       {
         if (particle->getStatus() == true) {
-          geometryRenderer.render(particle->getBoundingVolume());
+          particleManagerRenderer.render(particle->getBoundingVolume());
         }
       }
     }
@@ -269,7 +272,7 @@ public:
 
     if (debug) {
       defaultRenderer.setTexture(null);
-      geometryRenderer.render(physics->getParticleManager());
+      particleManagerRenderer.render(physics->getParticleManager());
     }
 
     terrainRenderer.render(camera);
@@ -282,7 +285,7 @@ public:
   }
 
   void fire(const vector &position, bool booble = false) {
-    BulletParticle *bullet = null;
+    Particle *bullet = null;
 
     logger->debug("Iterating particles");
     for (auto &particle : particles)

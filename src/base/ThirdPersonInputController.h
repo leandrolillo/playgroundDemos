@@ -8,7 +8,7 @@
 #ifndef SRC_DEMO_INPUTCONTROLLER_THIRDPERSONINPUTCONTROLLER_H_
 #define SRC_DEMO_INPUTCONTROLLER_THIRDPERSONINPUTCONTROLLER_H_
 
-#include "FPSInputController.h"
+#include "../base/FPSInputController.h"
 
 class ThirdPersonInputController : public FPSInputController {
     real distance = (real)4;

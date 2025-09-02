@@ -8,8 +8,8 @@
 #ifndef SRC_DEMO_INPUTCONTROLLER_FPSINPUTCONTROLLER_H_
 #define SRC_DEMO_INPUTCONTROLLER_FPSINPUTCONTROLLER_H_
 
-#include "InputController.h"
 #include <Camera.h>
+#include "../base/InputController.h"
 
 class FPSInputController : public InputController {
 protected:
