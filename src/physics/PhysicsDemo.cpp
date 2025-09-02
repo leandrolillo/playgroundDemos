@@ -89,7 +89,7 @@ class PhysicsDemoRunner: public BaseDemoRunner {
     bounceSource = audio->createSource("audio/twang3.wav", vector(0, 0, 0), vector(0, 0, 0), false);
 
     textureResource = (TextureResource*) this->getContainer()->getResourceManager().load("images/basketball.png", MimeTypes::TEXTURE);
-    basketball = (MeshResource*) this->getResourceManager().load("geometry/basketball.json", MimeTypes::MESH);
+    basketball = (MeshResource*) this->getResourceManager().load("geometry/basketball.json/basketball", MimeTypes::MESH);
 
     gridRenderer.setVideoRunner(*video);
     skyboxRenderer.setVideoRunner(*video);
