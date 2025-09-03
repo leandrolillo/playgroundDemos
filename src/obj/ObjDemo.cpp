@@ -115,9 +115,9 @@ public:
   }
   void initializePlayground() override {
     Playground::initializePlayground();
-    this->addRunner(new OpenGLRunner());
-    this->addRunner(new AudioRunner());
-    this->addRunner(new ObjDemoRunner());
+    this->addRunner(std::make_unique<OpenGLRunner>());
+    this->addRunner(std::make_unique<AudioRunner>());
+    this->addRunner(std::make_unique<ObjDemoRunner>());
   }
 };
 
