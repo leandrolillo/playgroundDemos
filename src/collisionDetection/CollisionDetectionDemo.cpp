@@ -13,7 +13,7 @@
 #include <AudioRunner.h>
 #include<SkyboxRenderer.h>
 #include<GridRenderer.h>
-#include<GeometryRenderer.h>
+#include"../base/ParticleManagerRenderer.h"
 
 #include<Math3d.h>
 #include<Gravity.h>
@@ -73,10 +73,10 @@ class CollisionDetectionDemoRunner: public BaseDemoRunner {
 
     SkyboxRenderer skyboxRenderer;
     GridRenderer gridRenderer;
-    GeometryRenderer geometryRenderer;
+    ParticleManagerRenderer particleManagerRenderer;
 
 public:
-    CollisionDetectionDemoRunner() : ground(new Plane(vector(0, 0, 0), vector(0, 1, 0))), geometryRenderer(defaultRenderer) {
+    CollisionDetectionDemoRunner() : ground(new Plane(vector(0, 0, 0), vector(0, 1, 0))), particleManagerRenderer(defaultRenderer) {
     }
 
     virtual void onResize(unsigned int height, unsigned int width) override {
@@ -183,58 +183,14 @@ public:
         particleManager.detectCollisions();
         std::vector<ParticleContact> contacts = particleManager.getContacts();
 
-        renderParticleManager(&particleManager);
-        geometryRenderer.render(&anotherCamera.getFrustum());
+        particleManagerRenderer.render(&particleManager);
+        particleManagerRenderer.render(&anotherCamera.getFrustum());
 
         defaultRenderer.render(camera);
         skyboxRenderer.render(camera);
         gridRenderer.render(camera);
 
         return LoopResult::CONTINUE;
-    }
-
-    const MaterialResource red = MaterialResource(vector(1, 0, 0), vector(1, 0, 0), vector(1, 0, 0), 1.0, 0.5);
-    const MaterialResource green = MaterialResource(vector(0, 1, 0), vector(0, 1, 0), vector(0, 1, 0), 0.5);
-    const MaterialResource blue = MaterialResource(vector(0, 0, 1), vector(0, 0, 1), vector(0, 0, 1), 0.5);
-    const MaterialResource black {vector(0, 0, 0), vector(0, 0, 0), vector(0, 0, 0), 1.0, 0.2 };
-    const MaterialResource white {vector(1, 1, 1), vector(1, 1, 1), vector(1, 1, 1), 1.0, 0.2 };
-
-    void renderParticleManager(const ParticleManager *particleManager) {
-      defaultRenderer.setMaterial(&green);
-      for(auto &contact : particleManager->getContacts()) {
-        renderContact(contact);
-      }
-
-      defaultRenderer.setMaterial(&white);
-      for(auto scenery : particleManager->getScenery()) {
-        geometryRenderer.render(scenery);
-      }
-
-      for(auto particle : particleManager->getParticles()) {
-        if(particle->getStatus()) {
-          defaultRenderer.setMaterial(&black);
-          bool isColliding = false;
-          for(auto &contact : particleManager->getContacts()) {
-            if(contact.getParticleA() == particle) {
-              defaultRenderer.setMaterial(&red);
-              break;
-
-            } else if (contact.getParticleB() ==  particle) {
-              defaultRenderer.setMaterial(&blue);
-              break;
-            }
-          }
-
-
-          geometryRenderer.render(particle->getBoundingVolume(), isColliding);
-        }
-      }
-    }
-
-    void renderContact(const ParticleContact &contact) {
-          vector start = contact.getIntersection(); //contact.getParticleA()->getPosition();
-          vector end = start + contact.getNormal() * contact.getPenetration();
-          defaultRenderer.drawLine(matriz_4x4::identidad, start, end);
     }
 
 
