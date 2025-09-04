@@ -14,7 +14,7 @@
 
 #include<SkyboxRenderer.h>
 #include<GridRenderer.h>
-
+#include "GeometryRenderer.h"
 #include<Gravity.h>
 
 #include<Geometry.h>
@@ -31,7 +31,7 @@ private:
   PhysicsDemoRunner *runner = null;
 
 public:
-  BulletParticle() : Particle(new Sphere(vector(0, 0, 0), 0.1)) {
+  BulletParticle() : Particle(std::make_unique<Sphere> (vector(0, 0, 0), 0.1)) {
 
   }
   void setRunner(PhysicsDemoRunner *runner);
@@ -48,12 +48,9 @@ class PhysicsDemoRunner: public BaseDemoRunner {
   Source *gunshotSource = null;
   Source *bounceSource = null;
 
-  std::vector<std::unique_ptr<BulletParticle>> particles;
-  Gravity gravity = Gravity(vector(0.0, -9.8, 0.0));
   //Plane ground = Plane(vector(0, 0, 0), vector(0, 1, 0));
-  Particle ground;
-  Particle spherePlatform;
-  Particle aabbPlatform;
+  Particle *spherePlatform = null;
+  Particle *aabbPlatform = null;
 
   unsigned long to = 0;
   real invPerformanceFreq = 1.0f;
@@ -61,6 +58,7 @@ class PhysicsDemoRunner: public BaseDemoRunner {
   /**
    * Renderers - defaultRenderer inherited from base demo
    */
+  GeometryRenderer geometryRenderer;
   SkyboxRenderer skyboxRenderer;
   GridRenderer gridRenderer;
 
@@ -73,10 +71,10 @@ class PhysicsDemoRunner: public BaseDemoRunner {
   MaterialResource material = MaterialResource(vector(0.5, 0.5, 0.5), vector(0.7, 0.7, 0.7), vector(1, 1, 1), 32);
 
   MeshResource *basketball = null;
+
+  std::vector<BulletParticle *>bullets;
   public:
-  PhysicsDemoRunner() : ground(new Plane(vector(0, 0, 0), vector(0, 1, 0))),
-      spherePlatform(new Sphere(vector(0.0, 0.0, 0.0), 0.1)),
-      aabbPlatform(new AABB(vector(0.0, 1.0, 0.0), vector(0.5, 0.05, 0.05))) {
+  PhysicsDemoRunner() : geometryRenderer(defaultRenderer) {
   }
 
   bool initialize() override {
@@ -97,24 +95,23 @@ class PhysicsDemoRunner: public BaseDemoRunner {
 
     defaultRenderer.setLight(&light);
 
-    ground.setInverseMass(0.0); // this is actually the default value
-    spherePlatform.setInverseMass(0.0);
-    aabbPlatform.setInverseMass(0.0);
-
-    //physics->getParticleManager()->getCollisionDetector().addScenery(&ground);
+    //physics->getParticleManager().getCollisionDetector().addScenery(&ground);
     for (int index = 0; index < numberOfParticles; index++) {
-      particles.push_back(std::unique_ptr < BulletParticle > (new BulletParticle()));
-      particles.back()->setStatus(false);
-      particles.back()->setRunner(this);
-
-      physics->getParticleManager()->addParticle(particles.back().get());
+      BulletParticle &bullet = (BulletParticle &)physics->getParticleManager().addParticle(std::make_unique<BulletParticle>());
+      bullet.setStatus(false);
+      bullet.setRunner(this);
+      bullets.push_back(&bullet);
     }
 
-    physics->getParticleManager()->addParticle(&spherePlatform);
-    physics->getParticleManager()->addParticle(&aabbPlatform);
-    physics->getParticleManager()->addParticle(&ground);
+    spherePlatform = &physics->getParticleManager().addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(vector(0.0, 0.0, 0.0), 0.1)));
+    spherePlatform->setInverseMass(0.0);
 
-    physics->getParticleManager()->addForce(&this->gravity);
+    aabbPlatform = &physics->getParticleManager().addParticle(std::make_unique<Particle>(std::make_unique<AABB>(vector(0.0, 1.0, 0.0), vector(0.5, 0.05, 0.05))));
+    aabbPlatform->setInverseMass(0.0);
+
+    physics->getParticleManager().addParticle(std::make_unique<Particle>(std::make_unique<Plane>(vector(0, 0, 0), vector(0, 1, 0)))).setInverseMass(0.0);
+
+    physics->getParticleManager().addForce(std::make_unique<Gravity>(vector(0.0, -9.8, 0.0)));
 
     reset();
 
@@ -122,50 +119,53 @@ class PhysicsDemoRunner: public BaseDemoRunner {
   }
 
   void reset() {
-    for (auto &particle : this->particles) {
-      particle->setStatus(false);
+    for(auto &bullet : bullets) {
+      bullet->setStatus(false);
     }
 
     video->setMousePosition(video->getScreenWidth() >> 1, video->getScreenHeight() >> 1);
 
     camera.setPosition(vector(1.0f, 0.0f, 5.0f));
-    spherePlatform.setPosition(vector(0, 0.5, 0));
-    aabbPlatform.setPosition(vector(0, 1.0, 0.0));
+    spherePlatform->setPosition(vector(0, 0.5, 0));
+    aabbPlatform->setPosition(vector(0, 1.0, 0.0));
   }
 
   LoopResult doLoop() override {
     defaultRenderer.clear();
     defaultRenderer.drawAxes(matriz_4x4::identidad);
-    defaultRenderer.drawLine(matriz_4x4::identidad, vector(-1, 0, 0), vector(1, 0, 0));
-    defaultRenderer.drawLine(matriz_4x4::identidad, vector(0, -1, 0), vector(0, 1, 0));
-    defaultRenderer.drawLine(matriz_4x4::identidad, vector(0, 0, -1), vector(0, 0, 1));
+//    defaultRenderer.drawLine(matriz_4x4::identidad, vector(-1, 0, 0), vector(1, 0, 0));
+//    defaultRenderer.drawLine(matriz_4x4::identidad, vector(0, -1, 0), vector(0, 1, 0));
+//    defaultRenderer.drawLine(matriz_4x4::identidad, vector(0, 0, -1), vector(0, 0, 1));
 
-    //defaultRenderer.drawObject(matriz_4x4::traslacion(spherePlatform.getPosition()) * matriz_4x4::zoom(0.1, 0.1, 0.1), basketball);
+    /**
+     * Render "platforms"
+     */
     defaultRenderer.setTexture(textureResource);
-    defaultRenderer.drawBox(matriz_4x4::traslacion(aabbPlatform.getPosition()),
-        2.0 * ((AABB*) aabbPlatform.getBoundingVolume())->getHalfSizes().x,
-        2.0 * ((AABB*) aabbPlatform.getBoundingVolume())->getHalfSizes().y,
-        2.0 * ((AABB*) aabbPlatform.getBoundingVolume())->getHalfSizes().z);
+    defaultRenderer.drawBox(matriz_4x4::traslacion(aabbPlatform->getPosition()),
+        2.0 * ((AABB &) aabbPlatform->getBoundingVolume()).getHalfSizes().x,
+        2.0 * ((AABB &) aabbPlatform->getBoundingVolume()).getHalfSizes().y,
+        2.0 * ((AABB &) aabbPlatform->getBoundingVolume()).getHalfSizes().z);
 
-    //defaultRenderer.drawSphere(matriz_4x4::traslacion(spherePlatform.getPosition()) * matriz_4x4::zoom(0.1, 0.1, 0.1));
-    defaultRenderer.drawObject(matriz_4x4::traslacion(spherePlatform.getPosition()) * matriz_4x4::zoom(0.1, 0.1, 0.1), basketball);
-    for (auto &particle : this->particles)
+    defaultRenderer.drawObject(matriz_4x4::traslacion(spherePlatform->getPosition()) * matriz_4x4::zoom(0.1, 0.1, 0.1), basketball);
+
+    /**
+     * Render basketballs
+     */
+    for (auto &particle : bullets)
     {
       if (particle->getStatus() == true) {
-        //defaultRenderer.setMaterial(&materials[(particleIterator - particles.begin()) % 3]);
         defaultRenderer.setTexture(textureResource);
         defaultRenderer.setMaterial(&material);
-//				defaultRenderer.drawSphere(matriz_4x4::traslacion(particle->getPosition()) * matriz_4x4::zoom(0.1, 0.1, 0.1));
-
         defaultRenderer.drawObject(matriz_4x4::traslacion(particle->getPosition()) * matriz_4x4::zoom(0.1, 0.1, 0.1), basketball);
       }
     }
+
     defaultRenderer.render(camera);
     skyboxRenderer.render(camera);
     gridRenderer.render(camera);
 
-    spherePlatform.setVelocity(vector(sin(this->getStopWatch().getTotalTime() + M_PI_2), 0, 0));
-    aabbPlatform.setVelocity(vector(-sin(this->getStopWatch().getTotalTime() + M_PI_2), 0, 0));
+    spherePlatform->setVelocity(vector(sin(this->getStopWatch().getTotalTime() + M_PI_2), 0, 0));
+    aabbPlatform->setVelocity(vector(-sin(this->getStopWatch().getTotalTime() + M_PI_2), 0, 0));
 
     return LoopResult::CONTINUE;
   }
@@ -191,10 +191,10 @@ class PhysicsDemoRunner: public BaseDemoRunner {
     BulletParticle *bullet = null;
 
     logger->debug("Iterating particles");
-    for (auto &particle : particles)
+    for (auto particle : bullets)
     {
       if (!particle->getStatus()) {
-        bullet = particle.get();
+        bullet = particle;
         break;
       }
     }
