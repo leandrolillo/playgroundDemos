@@ -31,7 +31,7 @@ private:
   PhysicsDemoRunner *runner = null;
 
 public:
-  BulletParticle() : Particle(new Sphere(vector(0, 0, 0), 0.1)) {
+  BulletParticle() : Particle(std::make_unique < Sphere > (vector(0, 0, 0), 0.1)) {
 
   }
   void setRunner(PhysicsDemoRunner *runner);
@@ -48,12 +48,10 @@ class PhysicsDemoRunner: public BaseDemoRunner {
   Source *gunshotSource = null;
   Source *bounceSource = null;
 
-  std::vector<std::unique_ptr<BulletParticle>> particles;
   Gravity gravity = Gravity(vector(0.0, -9.8, 0.0));
   //Plane ground = Plane(vector(0, 0, 0), vector(0, 1, 0));
-  Particle ground;
-  Particle spherePlatform;
-  Particle aabbPlatform;
+  Particle *spherePlatform = null;
+  Particle *aabbPlatform = null;
 
   unsigned long to = 0;
   real invPerformanceFreq = 1.0f;
@@ -74,9 +72,7 @@ class PhysicsDemoRunner: public BaseDemoRunner {
 
   MeshResource *basketball = null;
   public:
-  PhysicsDemoRunner() : ground(new Plane(vector(0, 0, 0), vector(0, 1, 0))),
-      spherePlatform(new Sphere(vector(0.0, 0.0, 0.0), 0.1)),
-      aabbPlatform(new AABB(vector(0.0, 1.0, 0.0), vector(0.5, 0.05, 0.05))) {
+  PhysicsDemoRunner() {
   }
 
   bool initialize() override {
@@ -97,24 +93,22 @@ class PhysicsDemoRunner: public BaseDemoRunner {
 
     defaultRenderer.setLight(&light);
 
-    ground.setInverseMass(0.0); // this is actually the default value
-    spherePlatform.setInverseMass(0.0);
-    aabbPlatform.setInverseMass(0.0);
-
-    //physics->getParticleManager()->getCollisionDetector().addScenery(&ground);
+    //physics->getParticleManager().getCollisionDetector().addScenery(&ground);
     for (int index = 0; index < numberOfParticles; index++) {
-      particles.push_back(std::unique_ptr < BulletParticle > (new BulletParticle()));
-      particles.back()->setStatus(false);
-      particles.back()->setRunner(this);
-
-      physics->getParticleManager()->addParticle(particles.back().get());
+      BulletParticle &bulletParticle = (BulletParticle &)physics->getParticleManager().addParticle(std::unique_ptr<BulletParticle>());
+      bulletParticle.setStatus(false);
+      bulletParticle.setRunner(this);
     }
 
-    physics->getParticleManager()->addParticle(&spherePlatform);
-    physics->getParticleManager()->addParticle(&aabbPlatform);
-    physics->getParticleManager()->addParticle(&ground);
+    spherePlatform = &physics->getParticleManager().addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(vector(0.0, 0.0, 0.0), 0.1)));
+    spherePlatform->setInverseMass(0.0);
 
-    physics->getParticleManager()->addForce(&this->gravity);
+    aabbPlatform = &physics->getParticleManager().addParticle(std::make_unique<Particle>(std::make_unique<AABB>(vector(0.0, 1.0, 0.0), vector(0.5, 0.05, 0.05))));
+    aabbPlatform->setInverseMass(0.0);
+
+    physics->getParticleManager().addParticle(std::make_unique<Particle>(std::make_unique<Plane>(vector(0, 0, 0), vector(0, 1, 0)))).setInverseMass(0.0);
+
+    physics->getParticleManager().addForce(&this->gravity);
 
     reset();
 

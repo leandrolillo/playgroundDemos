@@ -52,26 +52,26 @@ public:
   using GeometryRenderer::render;
 
   void render(const ParticleManager *particleManager) const {
-        renderer.setMaterial(contactMaterial);
+    renderer.setMaterial(contactMaterial);
     for(auto &contact : particleManager->getContacts()) {
       this->renderContact(contact);
     }
 
     renderer.setMaterial(sceneryMaterial);
-    for(auto scenery : particleManager->getScenery()) {
-      GeometryRenderer::render(scenery);
+    for(auto &scenery : particleManager->getScenery()) {
+      GeometryRenderer::render(*scenery);
     }
 
-    for(auto particle : particleManager->getParticles()) {
+    for(auto &particle : particleManager->getParticles()) {
       if(particle->getStatus()) {
         renderer.setMaterial(particleMaterial);
         bool isColliding = false;
         for(auto &contact : particleManager->getContacts()) {
-          if(contact.getParticleA() == particle) {
+          if(contact.getParticleA() == particle.get()) {
             renderer.setMaterial(collidingParticleAMaterial);
             break;
 
-          } else if (contact.getParticleB() ==  particle) {
+          } else if (contact.getParticleB() ==  particle.get()) {
             renderer.setMaterial(collidingParticleBMaterial);
             break;
           }

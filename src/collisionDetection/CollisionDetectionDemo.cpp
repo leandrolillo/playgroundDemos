@@ -32,7 +32,7 @@ private:
     bool _isSelected = false;
 
 public:
-    CollidingParticle(Geometry * geometry) : Particle(geometry) {
+    CollidingParticle(std::unique_ptr<Geometry> geometry) : Particle(std::move(geometry)) {
     }
 
     bool isSelected() const {
@@ -44,21 +44,21 @@ public:
     }
 };
 
-class CameraParticle : public CollidingParticle {
-	Camera &camera;
-public:
-	CameraParticle(Camera &camera) : CollidingParticle(&camera.getFrustum()), camera(camera){
-	}
-
-	void setPosition(const vector &position) {
-		camera.setPosition(position);
-	}
-
-	const vector &getPosition() const {
-		return this->camera.getPosition();
-	}
-
-};
+//class CameraParticle : public CollidingParticle {
+//	Camera &camera;
+//public:
+//	CameraParticle(Camera &camera) : CollidingParticle(&camera.getFrustum()), camera(camera){
+//	}
+//
+//	void setPosition(const vector &position) {
+//		camera.setPosition(position);
+//	}
+//
+//	const vector &getPosition() const {
+//		return this->camera.getPosition();
+//	}
+//
+//};
 
 class CollisionDetectionDemoRunner: public BaseDemoRunner {
     ParticleManager particleManager;
@@ -162,8 +162,8 @@ public:
 
         particleManager.addParticle(&ground);
 
-        collidingParticles.push_back(std::unique_ptr<CollidingParticle>(new CameraParticle(anotherCamera)));
-        particleManager.addParticle(collidingParticles.back().get());
+//        collidingParticles.push_back(std::unique_ptr<CollidingParticle>(new CameraParticle(anotherCamera)));
+//        particleManager.addParticle(collidingParticles.back().get());
 
 
         reset();
@@ -184,7 +184,7 @@ public:
         std::vector<ParticleContact> contacts = particleManager.getContacts();
 
         particleManagerRenderer.render(&particleManager);
-        particleManagerRenderer.render(&anotherCamera.getFrustum());
+        //particleManagerRenderer.render(&anotherCamera.getFrustum());
 
         defaultRenderer.render(camera);
         skyboxRenderer.render(camera);
