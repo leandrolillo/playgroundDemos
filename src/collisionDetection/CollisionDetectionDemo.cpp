@@ -179,7 +179,7 @@ public:
         particleManager.detectCollisions();
         std::vector<ParticleContact> contacts = particleManager.getContacts();
 
-        particleManagerRenderer.render(&particleManager);
+        particleManagerRenderer.render(particleManager);
         //particleManagerRenderer.render(&anotherCamera.getFrustum());
 
         defaultRenderer.render(camera);

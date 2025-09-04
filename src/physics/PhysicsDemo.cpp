@@ -48,7 +48,6 @@ class PhysicsDemoRunner: public BaseDemoRunner {
   Source *gunshotSource = null;
   Source *bounceSource = null;
 
-  Gravity gravity = Gravity(vector(0.0, -9.8, 0.0));
   //Plane ground = Plane(vector(0, 0, 0), vector(0, 1, 0));
   Particle *spherePlatform = null;
   Particle *aabbPlatform = null;
@@ -72,8 +71,10 @@ class PhysicsDemoRunner: public BaseDemoRunner {
   MaterialResource material = MaterialResource(vector(0.5, 0.5, 0.5), vector(0.7, 0.7, 0.7), vector(1, 1, 1), 32);
 
   MeshResource *basketball = null;
+
+  std::vector<BulletParticle *>bullets;
   public:
-  PhysicsDemoRunner() : geometryRenderer(renderer) {
+  PhysicsDemoRunner() : geometryRenderer(defaultRenderer) {
   }
 
   bool initialize() override {
@@ -96,9 +97,10 @@ class PhysicsDemoRunner: public BaseDemoRunner {
 
     //physics->getParticleManager().getCollisionDetector().addScenery(&ground);
     for (int index = 0; index < numberOfParticles; index++) {
-      BulletParticle &bulletParticle = (BulletParticle &)physics->getParticleManager().addParticle(std::unique_ptr<BulletParticle>());
-      bulletParticle.setStatus(false);
-      bulletParticle.setRunner(this);
+      BulletParticle &bullet = (BulletParticle &)physics->getParticleManager().addParticle(std::unique_ptr<BulletParticle>());
+      bullet.setStatus(false);
+      bullet.setRunner(this);
+      bullets.push_back(&bullet);
     }
 
     spherePlatform = &physics->getParticleManager().addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(vector(0.0, 0.0, 0.0), 0.1)));
@@ -109,7 +111,7 @@ class PhysicsDemoRunner: public BaseDemoRunner {
 
     physics->getParticleManager().addParticle(std::make_unique<Particle>(std::make_unique<Plane>(vector(0, 0, 0), vector(0, 1, 0)))).setInverseMass(0.0);
 
-    physics->getParticleManager().addForce(&this->gravity);
+    physics->getParticleManager().addForce(std::make_unique<Gravity>(vector(0.0, -9.8, 0.0)));
 
     reset();
 
@@ -191,10 +193,10 @@ class PhysicsDemoRunner: public BaseDemoRunner {
     BulletParticle *bullet = null;
 
     logger->debug("Iterating particles");
-    for (auto &particle : particles)
+    for (auto particle : bullets)
     {
       if (!particle->getStatus()) {
-        bullet = particle.get();
+        bullet = particle;
         break;
       }
     }

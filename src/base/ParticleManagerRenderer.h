@@ -51,22 +51,22 @@ public:
 
   using GeometryRenderer::render;
 
-  void render(const ParticleManager *particleManager) const {
+  void render(const ParticleManager &particleManager) const {
     renderer.setMaterial(contactMaterial);
-    for(auto &contact : particleManager->getContacts()) {
+    for(auto &contact : particleManager.getContacts()) {
       this->renderContact(contact);
     }
 
     renderer.setMaterial(sceneryMaterial);
-    for(auto &scenery : particleManager->getScenery()) {
+    for(auto &scenery : particleManager.getScenery()) {
       GeometryRenderer::render(*scenery);
     }
 
-    for(auto &particle : particleManager->getParticles()) {
+    for(auto &particle : particleManager.getParticles()) {
       if(particle->getStatus()) {
         renderer.setMaterial(particleMaterial);
         bool isColliding = false;
-        for(auto &contact : particleManager->getContacts()) {
+        for(auto &contact : particleManager.getContacts()) {
           if(contact.getParticleA() == particle.get()) {
             renderer.setMaterial(collidingParticleAMaterial);
             break;

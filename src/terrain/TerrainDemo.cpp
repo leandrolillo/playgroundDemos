@@ -114,13 +114,8 @@ private:
   VertexArrayResource *tree = null;
   TextureResource *treeTexture = null;
   std::vector<matriz_4x4> treePositions;
-  std::vector<std::unique_ptr<AABB>> treeBoundingVolumes;
 
   TerrainResource *terrain = null;
-  std::unique_ptr<HierarchicalGeometry> terrainBoundingVolume;
-
-  std::vector<std::unique_ptr<Particle>> particles;
-  Gravity gravity = Gravity(vector(0.0, -9.8, 0.0));
 
   MaterialResource black { vector(0, 0, 0), vector(0, 0, 0), vector(0, 0, 0), 1.0, 0.2 };
   MaterialResource white { vector(1, 1, 1), vector(1, 1, 1), vector(1, 1, 1), 1.0, 0.2 };
@@ -152,6 +147,7 @@ public:
     }
 
     physics = (PhysicsRunner*) this->getContainer()->getRequiredRunner(PhysicsRunner::ID);
+    physics->getParticleManager().addForce(std::make_unique<Gravity>(vector(0.0, -9.8, 0.0)));
 
     video->enable(RELATIVE_MOUSE_MODE, 0);
     video->enable(BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -186,36 +182,34 @@ public:
     /**
      * Setup terrain hierarchical bounding volume - aabbs per heightmap are actually unnecessary since its current intersection test does aabb check as well.
      */
-    terrainBoundingVolume = std::unique_ptr < HierarchicalGeometry > (new HierarchicalGeometry(
-        new AABB(vector(0, 0, 0),
-            vector(terrain->getHeightMap()->getWidth(),
-                terrain->getHeightMap()->getHeight(), terrain->getHeightMap()->getDepth()))));
+    HierarchicalGeometry *terrainBoundingVolume =
+        (HierarchicalGeometry *)&physics->getParticleManager().addScenery(std::make_unique<HierarchicalGeometry>(
+            std::make_unique<AABB>(vector(0, 0, 0),
+            vector(terrain->getHeightMap()->getWidth(), terrain->getHeightMap()->getHeight(), terrain->getHeightMap()->getDepth()))));
 
     vector terrainHalfSizes = vector(terrain->getHeightMap()->getWidth() * 0.5,
         terrain->getHeightMap()->getHeight() * 0.5,
         terrain->getHeightMap()->getDepth() * 0.5);
 
-    terrainBoundingVolume->addChildren(new HeightMapGeometry(vector(0, 0, 0), *terrain->getHeightMap()));
-    terrainBoundingVolume->addChildren(new HeightMapGeometry(vector(-terrain->getHeightMap()->getWidth(), 0, 0), *terrain->getHeightMap()));
-    terrainBoundingVolume->addChildren(new HeightMapGeometry(vector(0, 0, -terrain->getHeightMap()->getDepth()), *terrain->getHeightMap()));
-    terrainBoundingVolume->addChildren(
-        new HeightMapGeometry(vector(-terrain->getHeightMap()->getWidth(), 0, -terrain->getHeightMap()->getDepth()),
-            *terrain->getHeightMap()));
+    terrainBoundingVolume->addChildren(std::make_unique<HeightMapGeometry>(vector(0, 0, 0), *terrain->getHeightMap()));
+    terrainBoundingVolume->addChildren(std::make_unique<HeightMapGeometry>(vector(-terrain->getHeightMap()->getWidth(), 0, 0), *terrain->getHeightMap()));
+    terrainBoundingVolume->addChildren(std::make_unique<HeightMapGeometry>(vector(0, 0, -terrain->getHeightMap()->getDepth()), *terrain->getHeightMap()));
+    terrainBoundingVolume->addChildren(std::make_unique<HeightMapGeometry>(vector(-terrain->getHeightMap()->getWidth(), 0, -terrain->getHeightMap()->getDepth()), *terrain->getHeightMap()));
 
     skyboxRenderer.setVideoRunner(*video);
     skyboxRenderer.setSize(300);
 
-    physics->getParticleManager()->addForce(&this->gravity);
-    physics->getParticleManager()->addScenery(terrainBoundingVolume.get());
 
+    /**
+     * Add bullets to particle manager
+     */
     for (int index = 0; index < numberOfParticles; index++) {
-      particles.push_back(std::make_unique<Particle>(new Sphere(vector(0, 0, 0), 0.1)));
-      particles.back()->setStatus(false);
-      //particles.back()->setRunner(this);
-
-      physics->getParticleManager()->addParticle(particles.back().get());
+      physics->getParticleManager().addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(vector(0, 0, 0), 0.1))).setStatus(false);
     }
 
+    /**
+     * Add tree positions and bounding boxes
+     */
     for (int index = 0; index < 20; index++) {
       real x = rrand() * terrain->getHeightMap()->getWidth();
       real z = rrand() * terrain->getHeightMap()->getDepth();
@@ -225,10 +219,7 @@ public:
       this->treePositions.push_back(matriz_4x4::traslacion(position) * matriz_4x4::rotacion(0, radian(rrand() * 360.0), 0));
 
       vector halfsizes(tree->getSize() * 0.5);
-      this->treeBoundingVolumes.push_back(
-          std::unique_ptr < AABB
-              > (new AABB(position + vector(0, halfsizes.y, 0), vector(halfsizes.x * 0.15, halfsizes.y, halfsizes.z * 0.15))));
-      physics->getParticleManager()->addScenery(treeBoundingVolumes.back().get());
+      physics->getParticleManager().addScenery(std::make_unique<AABB>(position + vector(0, halfsizes.y, 0), vector(halfsizes.x * 0.15, halfsizes.y, halfsizes.z * 0.15)));
     }
 
     reset();
@@ -241,10 +232,7 @@ public:
     //light.setPosition(position);
     inputController->reset();
 
-    for (auto &particle : this->particles) {
-      particle->setStatus(false);
-    }
-
+    physics->getParticleManager().disableParticles();
   }
 
   virtual LoopResult doLoop() override {
@@ -256,7 +244,7 @@ public:
 
     // draw spheres when not debugging. If debugging they will be rendered exactly the same when rendering the particle manager data
     if (!debug) {
-      for (auto &particle : this->particles)
+      for (auto &particle : physics->getParticleManager().getParticles())
       {
         if (particle->getStatus() == true) {
           particleManagerRenderer.render(particle->getBoundingVolume());
@@ -288,7 +276,7 @@ public:
     Particle *bullet = null;
 
     logger->debug("Iterating particles");
-    for (auto &particle : particles)
+    for (auto &particle : physics->getParticleManager().getParticles())
     {
       if (!particle->getStatus()) {
         bullet = particle.get();
