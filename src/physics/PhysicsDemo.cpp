@@ -14,7 +14,7 @@
 
 #include<SkyboxRenderer.h>
 #include<GridRenderer.h>
-
+#include "GeometryRenderer.h"
 #include<Gravity.h>
 
 #include<Geometry.h>
@@ -59,6 +59,7 @@ class PhysicsDemoRunner: public BaseDemoRunner {
   /**
    * Renderers - defaultRenderer inherited from base demo
    */
+  GeometryRenderer geometryRenderer;
   SkyboxRenderer skyboxRenderer;
   GridRenderer gridRenderer;
 
@@ -72,7 +73,7 @@ class PhysicsDemoRunner: public BaseDemoRunner {
 
   MeshResource *basketball = null;
   public:
-  PhysicsDemoRunner() {
+  PhysicsDemoRunner() : geometryRenderer(renderer) {
   }
 
   bool initialize() override {
@@ -116,34 +117,38 @@ class PhysicsDemoRunner: public BaseDemoRunner {
   }
 
   void reset() {
-    for (auto &particle : this->particles) {
-      particle->setStatus(false);
-    }
+    physics->getParticleManager().disableParticles();
 
     video->setMousePosition(video->getScreenWidth() >> 1, video->getScreenHeight() >> 1);
 
     camera.setPosition(vector(1.0f, 0.0f, 5.0f));
-    spherePlatform.setPosition(vector(0, 0.5, 0));
-    aabbPlatform.setPosition(vector(0, 1.0, 0.0));
+    spherePlatform->setPosition(vector(0, 0.5, 0));
+    aabbPlatform->setPosition(vector(0, 1.0, 0.0));
   }
 
   LoopResult doLoop() override {
     defaultRenderer.clear();
-    defaultRenderer.drawAxes(matriz_4x4::identidad);
-    defaultRenderer.drawLine(matriz_4x4::identidad, vector(-1, 0, 0), vector(1, 0, 0));
-    defaultRenderer.drawLine(matriz_4x4::identidad, vector(0, -1, 0), vector(0, 1, 0));
-    defaultRenderer.drawLine(matriz_4x4::identidad, vector(0, 0, -1), vector(0, 0, 1));
+//    defaultRenderer.drawAxes(matriz_4x4::identidad);
+//    defaultRenderer.drawLine(matriz_4x4::identidad, vector(-1, 0, 0), vector(1, 0, 0));
+//    defaultRenderer.drawLine(matriz_4x4::identidad, vector(0, -1, 0), vector(0, 1, 0));
+//    defaultRenderer.drawLine(matriz_4x4::identidad, vector(0, 0, -1), vector(0, 0, 1));
 
-    //defaultRenderer.drawObject(matriz_4x4::traslacion(spherePlatform.getPosition()) * matriz_4x4::zoom(0.1, 0.1, 0.1), basketball);
+    /**
+     * Render "platforms"
+     */
     defaultRenderer.setTexture(textureResource);
-    defaultRenderer.drawBox(matriz_4x4::traslacion(aabbPlatform.getPosition()),
-        2.0 * ((AABB*) aabbPlatform.getBoundingVolume())->getHalfSizes().x,
-        2.0 * ((AABB*) aabbPlatform.getBoundingVolume())->getHalfSizes().y,
-        2.0 * ((AABB*) aabbPlatform.getBoundingVolume())->getHalfSizes().z);
+    geometryRenderer.render(aabbPlatform->getBoundingVolume());
+//    defaultRenderer.drawBox(matriz_4x4::traslacion(aabbPlatform->getPosition()),
+//        2.0 * ((AABB*) aabbPlatform->getBoundingVolume())->getHalfSizes().x,
+//        2.0 * ((AABB*) aabbPlatform->getBoundingVolume())->getHalfSizes().y,
+//        2.0 * ((AABB*) aabbPlatform->getBoundingVolume())->getHalfSizes().z);
 
-    //defaultRenderer.drawSphere(matriz_4x4::traslacion(spherePlatform.getPosition()) * matriz_4x4::zoom(0.1, 0.1, 0.1));
-    defaultRenderer.drawObject(matriz_4x4::traslacion(spherePlatform.getPosition()) * matriz_4x4::zoom(0.1, 0.1, 0.1), basketball);
-    for (auto &particle : this->particles)
+    defaultRenderer.drawObject(matriz_4x4::traslacion(spherePlatform->getPosition()) * matriz_4x4::zoom(0.1, 0.1, 0.1), basketball);
+
+    /**
+     * Render basketballs
+     */
+    for (auto &particle : physics->getParticleManager().getParticles())
     {
       if (particle->getStatus() == true) {
         //defaultRenderer.setMaterial(&materials[(particleIterator - particles.begin()) % 3]);
@@ -154,12 +159,13 @@ class PhysicsDemoRunner: public BaseDemoRunner {
         defaultRenderer.drawObject(matriz_4x4::traslacion(particle->getPosition()) * matriz_4x4::zoom(0.1, 0.1, 0.1), basketball);
       }
     }
+
     defaultRenderer.render(camera);
     skyboxRenderer.render(camera);
     gridRenderer.render(camera);
 
-    spherePlatform.setVelocity(vector(sin(this->getStopWatch().getTotalTime() + M_PI_2), 0, 0));
-    aabbPlatform.setVelocity(vector(-sin(this->getStopWatch().getTotalTime() + M_PI_2), 0, 0));
+    spherePlatform->setVelocity(vector(sin(this->getStopWatch().getTotalTime() + M_PI_2), 0, 0));
+    aabbPlatform->setVelocity(vector(-sin(this->getStopWatch().getTotalTime() + M_PI_2), 0, 0));
 
     return LoopResult::CONTINUE;
   }

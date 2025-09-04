@@ -62,11 +62,9 @@ public:
 
 class CollisionDetectionDemoRunner: public BaseDemoRunner {
     ParticleManager particleManager;
-    const CollisionTester &intersectionTester = *(particleManager.getCollisionDetector().getIntersectionTester());
+    const CollisionTester &intersectionTester = particleManager.getCollisionDetector().getIntersectionTester();
+    std::vector<CollidingParticle *>collidingParticles;
     Camera anotherCamera;
-
-    std::vector<std::unique_ptr<CollidingParticle>> collidingParticles;
-    Particle ground;
 
     vector2 startPosition;
     vector2 endPosition;
@@ -76,7 +74,7 @@ class CollisionDetectionDemoRunner: public BaseDemoRunner {
     ParticleManagerRenderer particleManagerRenderer;
 
 public:
-    CollisionDetectionDemoRunner() : ground(new Plane(vector(0, 0, 0), vector(0, 1, 0))), particleManagerRenderer(defaultRenderer) {
+    CollisionDetectionDemoRunner() :  particleManagerRenderer(defaultRenderer) {
     }
 
     virtual void onResize(unsigned int height, unsigned int width) override {
@@ -89,31 +87,32 @@ public:
         camera.setViewMatrix(matriz_4x4::traslacion(vector(0.0f, -0.5f, -10.0f)));
         anotherCamera.setViewMatrix(matriz_4x4::identidad);
 
+        auto &collidingParticles = particleManager.getParticles();
         real radius = (real) 0.5;
         if(collidingParticles.size() > 0) {
             collidingParticles[0]->setPosition(vector(-1, 0, 0));
-            ((Sphere*) collidingParticles[0]->getBoundingVolume())->setRadius(radius);
+            ((Sphere &) collidingParticles[0]->getBoundingVolume()).setRadius(radius);
             collidingParticles[0]->setMass(M_PI * radius * radius);
             collidingParticles[0]->setVelocity(vector(1, 1, 0));
         }
 
         if(collidingParticles.size() > 1) {
             collidingParticles[1]->setPosition(vector(1, 0, 0));
-            ((Sphere*) collidingParticles[1]->getBoundingVolume())->setRadius(radius);
+            ((Sphere &) collidingParticles[1]->getBoundingVolume()).setRadius(radius);
             collidingParticles[1]->setMass(M_PI * radius * radius);
             collidingParticles[1]->setVelocity(vector(-1, -1, 0));
         }
 
         if(collidingParticles.size() > 2) {
             collidingParticles[2]->setPosition(vector(1, 0, 0));
-            ((AABB*) collidingParticles[2]->getBoundingVolume())->setHalfSizes(vector(0.5, 0.5, 0.5));
+            ((AABB &) collidingParticles[2]->getBoundingVolume()).setHalfSizes(vector(0.5, 0.5, 0.5));
             collidingParticles[2]->setMass(1);
             collidingParticles[2]->setVelocity(vector(-1, -1, 0));
         }
 
         if(collidingParticles.size() > 3) {
             collidingParticles[3]->setPosition(vector(1, 2, 0));
-            ((AABB*) collidingParticles[3]->getBoundingVolume())->setHalfSizes(vector(1, 1, 1));
+            ((AABB &) collidingParticles[3]->getBoundingVolume()).setHalfSizes(vector(1, 1, 1));
             collidingParticles[3]->setMass(1);
             collidingParticles[3]->setVelocity(vector(0, 0, 0));
         }
@@ -123,8 +122,6 @@ public:
             collidingParticles[4]->setMass(1);
             collidingParticles[4]->setVelocity(vector(0, 0, 0));
         }
-
-        ground.setInverseMass((real)0);
     }
 
     bool initialize() override {
@@ -140,27 +137,26 @@ public:
         logger->debug("Setting up video %d", video);
         video->enable(BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        collidingParticles.push_back(std::unique_ptr<CollidingParticle>(new CollidingParticle(new Sphere(vector(0, 0, 0), (real) 0.5))));
-        particleManager.addParticle(collidingParticles.back().get());
+        /**
+         * Add all particles to particle manager and colliding particles to collidingParticles list for internal management
+         */
+        collidingParticles.push_back(
+            (CollidingParticle *)&particleManager.addParticle(std::make_unique<CollidingParticle>(std::make_unique<Sphere>(vector(0, 0, 0), (real) 0.5))));
+        collidingParticles.push_back(
+            (CollidingParticle *)&particleManager.addParticle(std::make_unique<CollidingParticle>(std::make_unique<Sphere>(vector(0, 0, 0), (real) 0.5))));
+        collidingParticles.push_back(
+            (CollidingParticle *)&particleManager.addParticle(std::make_unique<CollidingParticle>(std::make_unique<AABB>(vector(0, 0, 0), vector(0.5, 0.5, 0.5)))));
+        collidingParticles.push_back(
+            (CollidingParticle *)&particleManager.addParticle(std::make_unique<CollidingParticle>(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 1, 1)))));
 
-        collidingParticles.push_back(std::unique_ptr<CollidingParticle>(new CollidingParticle(new Sphere(vector(0, 0, 0), (real) 0.5))));
-        particleManager.addParticle(collidingParticles.back().get());
+        auto hierarchicalGeometry = std::make_unique<HierarchicalGeometry>(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 0.5, 0.5)));
+        hierarchicalGeometry->addChildren(std::make_unique<Sphere>(vector(-0.5, 0, 0), 0.5));
+        hierarchicalGeometry->addChildren(std::make_unique<Sphere>(vector(0.5, 0, 0), 0.5));
+        collidingParticles.push_back(
+            (CollidingParticle *)&particleManager.addParticle(std::make_unique<CollidingParticle>(std::move(hierarchicalGeometry))));
 
-        collidingParticles.push_back(std::unique_ptr<CollidingParticle>(new CollidingParticle(new AABB(vector(0, 0, 0), vector(0.5, 0.5, 0.5)))));
-        particleManager.addParticle(collidingParticles.back().get());
+        particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Plane>(vector(0, 0, 0), vector(0, 1, 0)))).setInverseMass((real)0);
 
-        collidingParticles.push_back(std::unique_ptr<CollidingParticle>(new CollidingParticle(new AABB(vector(0, 0, 0), vector(1, 1, 1)))));
-        particleManager.addParticle(collidingParticles.back().get());
-
-        HierarchicalGeometry *hierarchicalGeometry = new HierarchicalGeometry(new AABB(vector(0, 0, 0), vector(1, 0.5, 0.5)));
-        hierarchicalGeometry->addChildren(new Sphere(vector(-0.5, 0, 0), 0.5));
-        hierarchicalGeometry->addChildren(new Sphere(vector(0.5, 0, 0), 0.5));
-
-        collidingParticles.push_back(std::unique_ptr<CollidingParticle>(new CollidingParticle(hierarchicalGeometry)));
-//        collidingParticles.back()->setRunner(this);
-        particleManager.addParticle(collidingParticles.back().get());
-
-        particleManager.addParticle(&ground);
 
 //        collidingParticles.push_back(std::unique_ptr<CollidingParticle>(new CameraParticle(anotherCamera)));
 //        particleManager.addParticle(collidingParticles.back().get());
@@ -212,7 +208,7 @@ public:
                 for(auto &particle : collidingParticles) {
 
                 if (particle->isSelected()) {
-                    vector origin = particle->getBoundingVolume()->getOrigin();
+                    vector origin = particle->getBoundingVolume().getOrigin();
 
                     real t = (origin.z - line.getOrigin().z) / line.getDirection().z;
                     particle->setPosition(line.getOrigin() + t * line.getDirection());
@@ -244,7 +240,7 @@ public:
                     camera.getRayDirection((unsigned int) x, (unsigned int) y, video->getScreenWidth(), video->getScreenHeight()));
 
             for(auto &particle : collidingParticles) {
-                if (intersectionTester.intersects(*particle->getBoundingVolume(), (Geometry &)line)) {
+                if (intersectionTester.intersects(particle->getBoundingVolume(), (Geometry &)line)) {
                     particle->setSelected(true);
                 }
             }
