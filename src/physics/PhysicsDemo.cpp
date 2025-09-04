@@ -31,7 +31,7 @@ private:
   PhysicsDemoRunner *runner = null;
 
 public:
-  BulletParticle() : Particle(std::make_unique < Sphere > (vector(0, 0, 0), 0.1)) {
+  BulletParticle() : Particle(std::make_unique<Sphere> (vector(0, 0, 0), 0.1)) {
 
   }
   void setRunner(PhysicsDemoRunner *runner);
@@ -97,7 +97,7 @@ class PhysicsDemoRunner: public BaseDemoRunner {
 
     //physics->getParticleManager().getCollisionDetector().addScenery(&ground);
     for (int index = 0; index < numberOfParticles; index++) {
-      BulletParticle &bullet = (BulletParticle &)physics->getParticleManager().addParticle(std::unique_ptr<BulletParticle>());
+      BulletParticle &bullet = (BulletParticle &)physics->getParticleManager().addParticle(std::make_unique<BulletParticle>());
       bullet.setStatus(false);
       bullet.setRunner(this);
       bullets.push_back(&bullet);
@@ -119,7 +119,9 @@ class PhysicsDemoRunner: public BaseDemoRunner {
   }
 
   void reset() {
-    physics->getParticleManager().disableParticles();
+    for(auto &bullet : bullets) {
+      bullet->setStatus(false);
+    }
 
     video->setMousePosition(video->getScreenWidth() >> 1, video->getScreenHeight() >> 1);
 
@@ -130,7 +132,7 @@ class PhysicsDemoRunner: public BaseDemoRunner {
 
   LoopResult doLoop() override {
     defaultRenderer.clear();
-//    defaultRenderer.drawAxes(matriz_4x4::identidad);
+    defaultRenderer.drawAxes(matriz_4x4::identidad);
 //    defaultRenderer.drawLine(matriz_4x4::identidad, vector(-1, 0, 0), vector(1, 0, 0));
 //    defaultRenderer.drawLine(matriz_4x4::identidad, vector(0, -1, 0), vector(0, 1, 0));
 //    defaultRenderer.drawLine(matriz_4x4::identidad, vector(0, 0, -1), vector(0, 0, 1));
@@ -139,25 +141,21 @@ class PhysicsDemoRunner: public BaseDemoRunner {
      * Render "platforms"
      */
     defaultRenderer.setTexture(textureResource);
-    geometryRenderer.render(aabbPlatform->getBoundingVolume());
-//    defaultRenderer.drawBox(matriz_4x4::traslacion(aabbPlatform->getPosition()),
-//        2.0 * ((AABB*) aabbPlatform->getBoundingVolume())->getHalfSizes().x,
-//        2.0 * ((AABB*) aabbPlatform->getBoundingVolume())->getHalfSizes().y,
-//        2.0 * ((AABB*) aabbPlatform->getBoundingVolume())->getHalfSizes().z);
+    defaultRenderer.drawBox(matriz_4x4::traslacion(aabbPlatform->getPosition()),
+        2.0 * ((AABB &) aabbPlatform->getBoundingVolume()).getHalfSizes().x,
+        2.0 * ((AABB &) aabbPlatform->getBoundingVolume()).getHalfSizes().y,
+        2.0 * ((AABB &) aabbPlatform->getBoundingVolume()).getHalfSizes().z);
 
     defaultRenderer.drawObject(matriz_4x4::traslacion(spherePlatform->getPosition()) * matriz_4x4::zoom(0.1, 0.1, 0.1), basketball);
 
     /**
      * Render basketballs
      */
-    for (auto &particle : physics->getParticleManager().getParticles())
+    for (auto &particle : bullets)
     {
       if (particle->getStatus() == true) {
-        //defaultRenderer.setMaterial(&materials[(particleIterator - particles.begin()) % 3]);
         defaultRenderer.setTexture(textureResource);
         defaultRenderer.setMaterial(&material);
-//				defaultRenderer.drawSphere(matriz_4x4::traslacion(particle->getPosition()) * matriz_4x4::zoom(0.1, 0.1, 0.1));
-
         defaultRenderer.drawObject(matriz_4x4::traslacion(particle->getPosition()) * matriz_4x4::zoom(0.1, 0.1, 0.1), basketball);
       }
     }
