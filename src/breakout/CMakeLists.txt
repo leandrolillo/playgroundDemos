@@ -1,11 +1,11 @@
 #executable
-set(MODULE_NAME blockout)
-add_executable(${MODULE_NAME} Blockout.cpp)
+set(MODULE_NAME breakout)
+add_executable(${MODULE_NAME} Breakout.cpp)
 
 #sources
 target_include_directories(${MODULE_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(${MODULE_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../base)
-target_link_libraries(${MODULE_NAME} playground openGLRunner audioRunner)
+target_link_libraries(${MODULE_NAME} playground openGLRunner audioRunner physicsRunner)
 
 set_target_properties(${MODULE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${MODULE_NAME}")
 
