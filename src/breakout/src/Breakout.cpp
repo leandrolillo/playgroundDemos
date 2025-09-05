@@ -1,8 +1,12 @@
 #include "../../base/BaseDemo.h"
 #include "PhysicsRunner.h"
 #include "GeometryRenderer.h"
+#include<random>
 
 #include "Entities.h"
+
+constexpr real zMin = -10;
+constexpr real zMax = 10;
 
 class BreakoutRunner: public BaseDemoRunner {
   PhysicsRunner *physics = null;
@@ -13,7 +17,7 @@ class BreakoutRunner: public BaseDemoRunner {
   GeometryRenderer geometryRenderer;
 public:
   BreakoutRunner() : background(0, 0), geometryRenderer(defaultRenderer),
-  light(vector(0, 0, 0), vector(0.6f, 0.6f, 0.6f), vector(0.2f, 0.2f, 0.2f), vector(0.1f, 0.1f, 0.1f), 1.0f) {
+  light(vector(0, 0, 0), vector(1, 1, 1), vector(1, 1, 1), vector(1, 1, 1), 1.0f) {
 
   }
   bool initialize() override {
@@ -29,17 +33,23 @@ public:
     physics = (PhysicsRunner*) this->getContainer()->getRequiredRunner(PhysicsRunner::ID);
     ParticleManager &particleManager = physics->getParticleManager();
 
-    ball = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(vector(0, 0, 0), 0.5)));
+    ball = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(vector(0, 0, 0), 10)));
+    std::mt19937 mtRNE; //random number engine
+    std::uniform_int_distribution<int> distribution(0, 360);
+    real angulo = distribution(mtRNE);
+    real modulo = distribution(mtRNE) / 10;
+
+    ball->setVelocity(vector(modulo * cos(radian(angulo)), modulo * sin(radian(angulo)), 0));
 
     return true;
   }
 
   LoopResult doLoop() override {
     defaultRenderer.clear();
-    //defaultRenderer.setLight(&light);
+    defaultRenderer.setLight(&light);
 
-    defaultRenderer.setTexture(null);
-    defaultRenderer.drawAxes(matriz_4x4::identidad);
+//    defaultRenderer.setTexture(null);
+//    defaultRenderer.drawAxes(matriz_4x4::identidad);
 
     background.draw(defaultRenderer);
     geometryRenderer.render(ball->getBoundingVolume());
@@ -50,17 +60,16 @@ public:
 
   virtual void onResize(unsigned int height, unsigned int width) override {
     //camera.setPerspectiveProjectionFov(45.0, (GLfloat) width / (GLfloat) height, 0.1, 600.0);
-    camera.setOrthographicProjection(height, width, -10, 10);
+    camera.setOrthographicProjection(height, width, zMin, zMax);
     background.resize(width, height);
   }
 
   virtual void onMouseWheel(int wheel) override {
     vector position = camera.getPosition() - vector(0.0, 0.0, std::min(1.0, 0.1 * wheel));
-    position.z = std::max(-10.0f, std::min(10.0f, position.z));
+    position.z = std::max(zMin + 1, std::min(zMax - 1, position.z));
     camera.setPosition(position);
     logger->info("Camera [%s]", camera.toString().c_str());
   }
-
 };
 
 class Breakout: public Playground {
