@@ -1,13 +1,9 @@
 #executable
 set(MODULE_NAME objDemo)
-add_executable(${MODULE_NAME} ObjDemo.cpp)
-
-#sources
-target_include_directories(${MODULE_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(${MODULE_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../base)
-target_link_libraries(${MODULE_NAME} playground openGLRunner audioRunner)
-
+add_executable(${MODULE_NAME})
 set_target_properties(${MODULE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${MODULE_NAME}")
+
+add_subdirectory(src)
 
 #resources - clean and copy from scratch
 add_custom_command( 
@@ -16,5 +12,5 @@ add_custom_command(
 add_custom_command( 
     TARGET ${MODULE_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${CMAKE_CURRENT_SOURCE_DIR}/../../resources
+            ${CMAKE_CURRENT_SOURCE_DIR}/resources
             "${CMAKE_BINARY_DIR}/${MODULE_NAME}/resources")

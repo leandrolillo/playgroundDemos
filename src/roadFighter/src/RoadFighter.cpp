@@ -5,7 +5,7 @@
  *      Author: leandro
  */
 
-#include "../base/BaseDemo.h"
+#include "../../base/BaseDemo.h"
 #include <MeshResource.h>
 
 class RoadFighterRunner: public BaseDemoRunner {

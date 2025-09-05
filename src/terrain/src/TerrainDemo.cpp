@@ -5,7 +5,7 @@
  *      Author: leandro
  */
 
-#include "../base/BaseDemo.h"
+#include "../../base/BaseDemo.h"
 #include<PhysicsRunner.h>
 
 #include<vector>
@@ -14,9 +14,9 @@
 #include<SkyboxRenderer.h>
 
 #include<Gravity.h>
-#include "../base/FPSInputController.h"
-#include "../base/ThirdPersonInputController.h"
-#include "../base/ParticleManagerRenderer.h"
+#include "../../base/FPSInputController.h"
+#include "../../base/ThirdPersonInputController.h"
+#include "../../base/ParticleManagerRenderer.h"
 #include "Particle.h"
 
 class TerrainFPSInputController: public FPSInputController {

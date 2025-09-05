@@ -19,7 +19,7 @@
 
 #include<Geometry.h>
 
-#include "../base/BaseDemo.h"
+#include "../../base/BaseDemo.h"
 
 constexpr unsigned int numberOfParticles = 60;
 

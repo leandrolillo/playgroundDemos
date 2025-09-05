@@ -10,7 +10,7 @@
 
 #include<vector>
 
-#include "../base/BaseDemo.h"
+#include "../../base/BaseDemo.h"
 
 class GeneralDemoRunner: public BaseDemoRunner {
 private:
@@ -148,7 +148,7 @@ private:
             vector3(-2.0, -1.0, 0.0)));
     defaultRenderer.render(camera);
 
-    rotation += 1;
+    rotation += 0.1;
 
     return LoopResult::CONTINUE;
   }

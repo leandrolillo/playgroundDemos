@@ -8,12 +8,12 @@
 #include <stdio.h>
 
 #define GL_SILENCE_DEPRECATION
-#include "../base/BaseDemo.h"
+#include "../../base/BaseDemo.h"
 #include <OpenGLRunner.h>
 #include <AudioRunner.h>
 #include<SkyboxRenderer.h>
 #include<GridRenderer.h>
-#include"../base/ParticleManagerRenderer.h"
+#include"../../base/ParticleManagerRenderer.h"
 
 #include<Math3d.h>
 #include<Gravity.h>
