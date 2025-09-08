@@ -6,6 +6,7 @@
  */
 #include <iostream>
 #include <stdio.h>
+#include <random>
 
 #define GL_SILENCE_DEPRECATION
 #include <OpenGLRunner.h>
@@ -24,6 +25,8 @@
 constexpr unsigned int numberOfParticles = 60;
 
 class PhysicsDemoRunner;
+
+static std::mt19937 mtRNE(std::chrono::system_clock::now().time_since_epoch().count()); //random number engine
 
 class BulletParticle: public Particle
 {
@@ -73,6 +76,18 @@ class PhysicsDemoRunner: public BaseDemoRunner {
   MeshResource *basketball = null;
 
   std::vector<BulletParticle *>bullets;
+
+
+  //Blockout
+  Particle *top = null;
+  Particle *bottom = null;
+  Particle *left = null;
+  Particle *right = null;
+
+  Particle * ball = null;
+
+  vector breakoutPosition {0, 4, 0};
+
   public:
   PhysicsDemoRunner() : geometryRenderer(defaultRenderer) {
   }
@@ -95,23 +110,46 @@ class PhysicsDemoRunner: public BaseDemoRunner {
 
     defaultRenderer.setLight(&light);
 
-    //physics->getParticleManager().getCollisionDetector().addScenery(&ground);
+    ParticleManager &particleManager = physics->getParticleManager();
+    /*There is currently a bug that makes the order on which we add t
+     * he particles matter*/
+
+
+    /*spherical platform*/
+    spherePlatform = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(vector(0.0, 0.0, 0.0), 0.1)));
+    spherePlatform->setInverseMass(0.0);
+
+    /*rectangular platform*/
+    aabbPlatform = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(vector(0.0, 1.0, 0.0), vector(0.5, 0.05, 0.05))));
+    aabbPlatform->setInverseMass(0.0);
+
+    /*Ground*/
+    particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Plane>(vector(0, 0, 0), vector(0, 1, 0)))).setInverseMass(0.0);
+
+    particleManager.addForce(std::make_unique<Gravity>(vector(0.0, -9.8, 0.0)));
+
+    /*Troubleshooting aabb sphere*/
+
+
+    real height = 9;
+    real width = 9;
+    real wall_depth = 1;
+    real wall_half_depth = wall_depth * 0.5;
+    /*Level limits*/
+    top = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(breakoutPosition + vector(0, height * 0.5, 0), vector(width * 0.5 - wall_half_depth, wall_half_depth, wall_half_depth)))).setInverseMass(0);
+    bottom = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(breakoutPosition + vector(0, height * -0.5, 0), vector(width * 0.5 - wall_half_depth, wall_half_depth, wall_half_depth)))).setInverseMass(0);
+    left = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(breakoutPosition + vector(width * -0.5, 0, 0), vector(wall_half_depth, height * 0.5 - wall_half_depth, wall_half_depth)))).setInverseMass(0);
+    right = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(breakoutPosition + vector(width * 0.5, 0, 0), vector(wall_half_depth, height *  0.5 - wall_half_depth, wall_half_depth)))).setInverseMass(0);
+
     for (int index = 0; index < numberOfParticles; index++) {
-      BulletParticle &bullet = (BulletParticle &)physics->getParticleManager().addParticle(std::make_unique<BulletParticle>());
+      BulletParticle &bullet = (BulletParticle &)particleManager.addParticle(std::make_unique<BulletParticle>());
       bullet.setStatus(false);
       bullet.setRunner(this);
       bullets.push_back(&bullet);
     }
 
-    spherePlatform = &physics->getParticleManager().addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(vector(0.0, 0.0, 0.0), 0.1)));
-    spherePlatform->setInverseMass(0.0);
+    ball = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(breakoutPosition, 0.1)));
 
-    aabbPlatform = &physics->getParticleManager().addParticle(std::make_unique<Particle>(std::make_unique<AABB>(vector(0.0, 1.0, 0.0), vector(0.5, 0.05, 0.05))));
-    aabbPlatform->setInverseMass(0.0);
-
-    physics->getParticleManager().addParticle(std::make_unique<Particle>(std::make_unique<Plane>(vector(0, 0, 0), vector(0, 1, 0)))).setInverseMass(0.0);
-
-    physics->getParticleManager().addForce(std::make_unique<Gravity>(vector(0.0, -9.8, 0.0)));
 
     reset();
 
@@ -123,9 +161,22 @@ class PhysicsDemoRunner: public BaseDemoRunner {
       bullet->setStatus(false);
     }
 
+    std::uniform_int_distribution<int> distribution(0, two_pi);
+    real angulo = distribution(mtRNE);
+    real modulo = distribution(mtRNE) * 0.1;
+
+    if(ball != null) {
+        logger->info("Ball random values - angle [%.2f], module [%.2f]", angulo, modulo);
+        ball->setPosition(breakoutPosition);
+        ball->setVelocity(vector(modulo * cos(angulo), modulo * sin(angulo), 0));
+        ball->setAcceleration(vector(0, 0, 0));
+        ball->setMass(0.1);
+        ball->setDamping(0.99f);
+    }
+
     video->setMousePosition(video->getScreenWidth() >> 1, video->getScreenHeight() >> 1);
 
-    camera.setPosition(vector(1.0f, 0.0f, 5.0f));
+    camera.setPosition(breakoutPosition + vector(0.0f, 0.0f, 10.0f));
     spherePlatform->setPosition(vector(0, 0.5, 0));
     aabbPlatform->setPosition(vector(0, 1.0, 0.0));
   }
@@ -159,6 +210,15 @@ class PhysicsDemoRunner: public BaseDemoRunner {
         defaultRenderer.drawObject(matriz_4x4::traslacion(particle->getPosition()) * matriz_4x4::zoom(0.1, 0.1, 0.1), basketball);
       }
     }
+
+    geometryRenderer.render(top->getBoundingVolume());
+    geometryRenderer.render(bottom->getBoundingVolume());
+    geometryRenderer.render(left->getBoundingVolume());
+    geometryRenderer.render(right->getBoundingVolume());
+    if(ball) {
+      defaultRenderer.drawObject(matriz_4x4::traslacion(ball->getPosition()) * matriz_4x4::zoom(0.1, 0.1, 0.1), basketball);
+    }
+
 
     defaultRenderer.render(camera);
     skyboxRenderer.render(camera);
@@ -241,7 +301,7 @@ class PhysicsDemoRunner: public BaseDemoRunner {
 
     float randomDx = ((real) rand() / (real) RAND_MAX * 0.1 - 0.05);
     //logger->info("RandomDx %f", randomDx);
-    fire(vector(randomDx, 2.0, 0.0), true);
+    fire(vector(randomDx, camera.getPosition().y - 0.5, 0.0), true);
   }
 
   virtual void onKeyDown(unsigned int key, unsigned int keyModifier) override {

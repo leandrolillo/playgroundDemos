@@ -28,7 +28,8 @@ public:
   }
 
   void draw(DefaultRenderer &renderer) override {
-    renderer.setTexture(texture);
+    const TextureResource *previousTexture = renderer.setTexture(texture);
     renderer.drawBox(matriz_4x4::traslacion(0,  0, 0), vector(width, height, 1));
+    renderer.setTexture(previousTexture);
   }
 };
