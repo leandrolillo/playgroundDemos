@@ -10,6 +10,10 @@ constexpr real zMax = 1000;
 
 static std::mt19937 mtRNE(std::chrono::system_clock::now().time_since_epoch().count()); //random number engine
 
+real WALL_DEPTH = 10;
+real PADDLE_VELOCITY = 100.0;
+
+
 class BreakoutRunner: public BaseDemoRunner {
   PhysicsRunner *physics = null;
   LightResource light;
@@ -18,6 +22,7 @@ class BreakoutRunner: public BaseDemoRunner {
 
   Background background;
   Particle *ball;
+  Particle *paddle;
 
   GeometryRenderer geometryRenderer;
 
@@ -58,7 +63,10 @@ public:
 
     /*Ball*/
     ball = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(vector(0, 0, 0), 10)));
-    ball->setMass(5.0);
+
+    paddle = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(vector(0, 0, 0), vector(30, 10, 10))));
+    //ball->setMass(1.0);
+    //ball->setDamping(1.0);
 
     reset();
 
@@ -71,11 +79,15 @@ public:
 
     std::uniform_int_distribution<int> distribution(0, 360);
     real angulo = distribution(mtRNE);
-    real modulo = distribution(mtRNE) * 2;
+    real modulo = distribution(mtRNE) * 10;
 
     logger->info("Ball random values - angle [%.2f], module [%.2f]", angulo, modulo);
     ball->setPosition(vector(0, 0, 0));
     ball->setVelocity(vector(modulo * cos(radian(angulo)), modulo * sin(radian(angulo)), 0));
+
+    paddle->setPosition(vector(0, paddle->getPosition().y, 0));
+    paddle->setVelocity(vector(0, 0, 0));
+    paddle->setInverseMass(0.0);
 
   }
 
@@ -90,10 +102,12 @@ public:
     defaultRenderer.drawObject(matriz_4x4::traslacion(ball->getBoundingVolume().getOrigin()) * matriz_4x4::zoom(0.1, 0.1, 0.1), basketball);
 
     geometryRenderer.render(ball->getBoundingVolume());
-//    geometryRenderer.render(top->getBoundingVolume());
-//    geometryRenderer.render(bottom->getBoundingVolume());
-//    geometryRenderer.render(left->getBoundingVolume());
-//    geometryRenderer.render(right->getBoundingVolume());
+    geometryRenderer.render(paddle->getBoundingVolume());
+
+    geometryRenderer.render(top->getBoundingVolume());
+    geometryRenderer.render(bottom->getBoundingVolume());
+    geometryRenderer.render(left->getBoundingVolume());
+    geometryRenderer.render(right->getBoundingVolume());
 
     defaultRenderer.render(camera);
     return LoopResult::CONTINUE;
@@ -104,18 +118,26 @@ public:
     camera.setOrthographicProjection(height, width, zMin, zMax);
     background.resize(width, height);
 
-    ((AABB &)top->getBoundingVolume()).setOrigin(vector(0, height * 0.5 - 10, 0));
-    ((AABB &)top->getBoundingVolume()).setHalfSizes(vector(width * 0.5, 10, 10));
+    real wallHalfDepth = WALL_DEPTH * 0.5;
 
-    ((AABB &)bottom->getBoundingVolume()).setOrigin(vector(0, height * -0.5 + 10, 0));
-    ((AABB &)bottom->getBoundingVolume()).setHalfSizes(vector(width * 0.5, 10, 10));
+    top->setPosition(vector(0, height * 0.5 + wallHalfDepth, 0));
+    ((AABB &)top->getBoundingVolume()).setHalfSizes(vector(width * 0.5, wallHalfDepth, wallHalfDepth));
 
-    ((AABB &)left->getBoundingVolume()).setOrigin(vector(width * -0.5 + 10, 0, 0));
-    ((AABB &)left->getBoundingVolume()).setHalfSizes(vector(10, height * 0.5, 10));
+    bottom->setPosition(vector(0, height * -0.5 - wallHalfDepth, 0));
+    ((AABB &)bottom->getBoundingVolume()).setHalfSizes(vector(width * 0.5, wallHalfDepth, wallHalfDepth));
 
-    ((AABB &)right->getBoundingVolume()).setOrigin(vector(width * 0.5 - 10, 0, 0));
-    ((AABB &)right->getBoundingVolume()).setHalfSizes(vector(10, height *  0.5, 10));
+    left->setPosition(vector(width * -0.5 - wallHalfDepth, 0, 0));
+    ((AABB &)left->getBoundingVolume()).setHalfSizes(vector(wallHalfDepth, height * 0.5, wallHalfDepth));
 
+    right->setPosition(vector(width * 0.5 + + wallHalfDepth, 0, 0));
+    ((AABB &)right->getBoundingVolume()).setHalfSizes(vector(wallHalfDepth, height *  0.5, wallHalfDepth));
+
+    paddle->setPosition(vector(
+        paddle->getPosition().x,
+        height * -0.5 + 2.0 * ((AABB &)paddle->getBoundingVolume()).getHalfSizes().y,
+        paddle->getPosition().z));
+
+    //((AABB &)paddle->getBoundingVolume()).getHalfSizes().y + 10.0
   }
 
   virtual void onMouseWheel(int wheel) override {
@@ -131,15 +153,35 @@ public:
     }
   }
 
+  virtual void onKeyUp(unsigned int key, unsigned int keyModifier) override {
+    switch (key) {
+      case SDLK_LEFT:
+      case SDLK_A:
+      case SDLK_RIGHT:
+      case SDLK_D:
+        paddle->setVelocity(vector(0, 0, 0));
+        break;
+    }
+  }
+
   virtual void onKeyDown(unsigned int key, unsigned int keyModifier) override {
     switch (key) {
-    case SDLK_SPACE:
-      physics->setEnabled(!physics->getEnabled());
-      break;
+      case SDLK_LEFT:
+      case SDLK_A:
+        paddle->setVelocity(vector(-PADDLE_VELOCITY, 0, 0));
+        break;
+      case SDLK_RIGHT:
+      case SDLK_D:
+        paddle->setVelocity(vector(PADDLE_VELOCITY, 0, 0));
+        break;
 
-    case SDLK_BACKSPACE:
-      reset();
-      break;
+      case SDLK_SPACE:
+        physics->setEnabled(!physics->getEnabled());
+        break;
+
+      case SDLK_BACKSPACE:
+        reset();
+        break;
     }
   }
 };
