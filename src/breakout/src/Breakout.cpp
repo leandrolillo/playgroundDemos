@@ -93,7 +93,7 @@ public:
 
   LoopResult doLoop() override {
     //logger->info("Ball: [%s] velocity [%s]", ball->getPosition().toString().c_str(), ball->getVelocity().toString().c_str());
-    defaultRenderer.clear();
+    //defaultRenderer.clear();
     //defaultRenderer.setLight(&light);
 //    defaultRenderer.drawAxes(matriz_4x4::identidad);
 
@@ -109,7 +109,7 @@ public:
     geometryRenderer.render(left->getBoundingVolume());
     geometryRenderer.render(right->getBoundingVolume());
 
-    defaultRenderer.render(camera);
+    //defaultRenderer.render(camera);
     return LoopResult::CONTINUE;
   }
 
@@ -144,7 +144,7 @@ public:
     vector position = camera.getPosition() - vector(0.0, 0.0, std::min(1.0, 0.1 * wheel));
     position.z = std::max(zMin + 1, std::min(zMax - 1, position.z));
     camera.setPosition(position);
-    logger->info("Camera [%s]", camera.toString().c_str());
+    logger->info("[%s]", camera.toString().c_str());
   }
 
   virtual void onMouseMove(int x, int y, int dx, int dy, unsigned int buttons) override {
