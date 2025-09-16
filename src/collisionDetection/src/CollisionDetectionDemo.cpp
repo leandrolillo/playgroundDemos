@@ -8,12 +8,14 @@
 #include <stdio.h>
 
 #define GL_SILENCE_DEPRECATION
-#include "../../base/BaseDemo.h"
 #include <OpenGLRunner.h>
 #include <AudioRunner.h>
 #include<SkyboxRenderer.h>
 #include<GridRenderer.h>
-#include"../../base/ParticleManagerRenderer.h"
+
+#include "../../base/BaseDemo.h"
+#include "../../base/ParticleManagerRenderer.h"
+#include "../../base/SelectableParticle.h"
 
 #include<Math3d.h>
 #include<Gravity.h>
@@ -21,28 +23,6 @@
 #include<Geometry.h>
 #include"CollisionTester.h"
 #include "ParticleManager.h"
-
-
-
-
-class CollisionDetectionDemoRunner;
-
-class CollidingParticle: public Particle {
-private:
-    bool _isSelected = false;
-
-public:
-    CollidingParticle(std::unique_ptr<Geometry> geometry) : Particle(std::move(geometry)) {
-    }
-
-    bool isSelected() const {
-        return this->_isSelected;
-    }
-
-    void setSelected(bool selected) {
-        this->_isSelected = selected;
-    }
-};
 
 //class CameraParticle : public CollidingParticle {
 //	Camera &camera;
@@ -63,7 +43,7 @@ public:
 class CollisionDetectionDemoRunner: public BaseDemoRunner {
     ParticleManager particleManager;
     const CollisionTester &intersectionTester = particleManager.getCollisionDetector().getIntersectionTester();
-    std::vector<CollidingParticle *>collidingParticles;
+    std::vector<SelectableParticle *>collidingParticles;
     Camera anotherCamera;
 
     vector2 startPosition;
@@ -77,10 +57,9 @@ public:
     CollisionDetectionDemoRunner() :  particleManagerRenderer(defaultRenderer) {
     }
 
-    virtual void onResize(unsigned int height, unsigned int width) override {
-    	BaseDemoRunner::onResize(height, width);
-      //camera.setProjectionMatrix(Camera::orthographicProjection(5.0, (double) width / (double) height, -20.0, 100.0));
-    }
+//    virtual void onResize(unsigned int height, unsigned int width) override {
+//      camera.setProjectionMatrix(Camera::orthographicProjection(5.0, (double) width / (double) height, -20.0, 100.0));
+//    }
 
 
     void reset() {
@@ -127,76 +106,65 @@ public:
     bool initialize() override {
     	BaseDemoRunner::initialize();
 
-        this->video->resize(800, 600);
+      this->video->resize(800, 600);
 
-        logger->debug("Initializing renderers");
-        gridRenderer.setVideoRunner(*video);
+      logger->debug("Initializing renderers");
+      gridRenderer.setVideoRunner(*video);
 //	    skyboxRenderer.setVideoRunner(video);
 //	    skyboxRenderer.setSize(200);
 
-        logger->debug("Setting up video %d", video);
-        video->enable(BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      logger->debug("Setting up video %d", video);
+      video->enable(BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        /**
-         * Add all particles to particle manager and colliding particles to collidingParticles list for internal management
-         */
-        collidingParticles.push_back(
-            (CollidingParticle *)&particleManager.addParticle(std::make_unique<CollidingParticle>(std::make_unique<Sphere>(vector(0, 0, 0), (real) 0.5))));
-        collidingParticles.push_back(
-            (CollidingParticle *)&particleManager.addParticle(std::make_unique<CollidingParticle>(std::make_unique<Sphere>(vector(0, 0, 0), (real) 0.5))));
-        collidingParticles.push_back(
-            (CollidingParticle *)&particleManager.addParticle(std::make_unique<CollidingParticle>(std::make_unique<AABB>(vector(0, 0, 0), vector(0.5, 0.5, 0.5)))));
-        collidingParticles.push_back(
-            (CollidingParticle *)&particleManager.addParticle(std::make_unique<CollidingParticle>(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 1, 1)))));
+      /**
+       * Add all particles to particle manager and colliding particles to collidingParticles list for internal management
+       */
+      collidingParticles.push_back(
+          (SelectableParticle *)&particleManager.addParticle(std::make_unique<SelectableParticle>(std::make_unique<Sphere>(vector(0, 0, 0), (real) 0.5))));
+      collidingParticles.push_back(
+          (SelectableParticle *)&particleManager.addParticle(std::make_unique<SelectableParticle>(std::make_unique<Sphere>(vector(0, 0, 0), (real) 0.5))));
+      collidingParticles.push_back(
+          (SelectableParticle *)&particleManager.addParticle(std::make_unique<SelectableParticle>(std::make_unique<AABB>(vector(0, 0, 0), vector(0.5, 0.5, 0.5)))));
+      collidingParticles.push_back(
+          (SelectableParticle *)&particleManager.addParticle(std::make_unique<SelectableParticle>(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 1, 1)))));
 
-        auto hierarchicalGeometry = std::make_unique<HierarchicalGeometry>(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 0.5, 0.5)));
-        hierarchicalGeometry->addChildren(std::make_unique<Sphere>(vector(-0.5, 0, 0), 0.5));
-        hierarchicalGeometry->addChildren(std::make_unique<Sphere>(vector(0.5, 0, 0), 0.5));
-        collidingParticles.push_back(
-            (CollidingParticle *)&particleManager.addParticle(std::make_unique<CollidingParticle>(std::move(hierarchicalGeometry))));
+      auto hierarchicalGeometry = std::make_unique<HierarchicalGeometry>(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 0.5, 0.5)));
+      hierarchicalGeometry->addChildren(std::make_unique<Sphere>(vector(-0.5, 0, 0), 0.5));
+      hierarchicalGeometry->addChildren(std::make_unique<Sphere>(vector(0.5, 0, 0), 0.5));
+      collidingParticles.push_back(
+          (SelectableParticle *)&particleManager.addParticle(std::make_unique<SelectableParticle>(std::move(hierarchicalGeometry))));
 
-        particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Plane>(vector(0, 0, 0), vector(0, 1, 0)))).setInverseMass((real)0);
+      particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Plane>(vector(0, 0, 0), vector(0, 1, 0)))).setInverseMass((real)0);
 
 
 //        collidingParticles.push_back(std::unique_ptr<CollidingParticle>(new CameraParticle(anotherCamera)));
 //        particleManager.addParticle(collidingParticles.back().get());
 
 
-        reset();
+      reset();
 
-        logger->debug("Completed initialization");
-        return true;
+      logger->debug("Completed initialization");
+      return true;
     }
 
 
     LoopResult doLoop() override {
-        defaultRenderer.drawAxes(matriz_4x4::identidad);
-        defaultRenderer.drawLine(matriz_4x4::identidad, vector(-1, 0, 0), vector(1, 0, 0));
-        defaultRenderer.drawLine(matriz_4x4::identidad, vector(0, -1, 0), vector(0, 1, 0));
-        defaultRenderer.drawLine(matriz_4x4::identidad, vector(0, 0, -1), vector(0, 0, 1));
+      defaultRenderer.drawAxes(matriz_4x4::identidad);
+      defaultRenderer.drawLine(matriz_4x4::identidad, vector(-1, 0, 0), vector(1, 0, 0));
+      defaultRenderer.drawLine(matriz_4x4::identidad, vector(0, -1, 0), vector(0, 1, 0));
+      defaultRenderer.drawLine(matriz_4x4::identidad, vector(0, 0, -1), vector(0, 0, 1));
 
-        particleManager.detectCollisions();
-        std::vector<ParticleContact> contacts = particleManager.getContacts();
+      particleManager.detectCollisions();
+      std::vector<ParticleContact> contacts = particleManager.getContacts();
 
-        particleManagerRenderer.render(particleManager);
-        //particleManagerRenderer.render(&anotherCamera.getFrustum());
+      particleManagerRenderer.render(particleManager);
+      //particleManagerRenderer.render(&anotherCamera.getFrustum());
 
-        skyboxRenderer.render(camera);
-        gridRenderer.render(camera);
+      skyboxRenderer.render(camera);
+      gridRenderer.render(camera);
 
-        return LoopResult::CONTINUE;
+      return LoopResult::CONTINUE;
     }
-
-
-//    void onCollision(CollidingParticle *sphereParticle) {
-//        //sphereParticle->setIsColliding(true);
-//    }
-//
-//    void afterIntegrate(CollidingParticle *particle) {
-//        if (particle->getPosition().modulo() > 100) {
-//            particle->setStatus(false);
-//        }
-//    }
 
     void onMouseMove(int x, int y, int dx, int dy, unsigned int buttons) override {
             Line line(camera.getPosition(),
@@ -316,23 +284,6 @@ public:
     		return "CollisionDetectionDemoRunner(id:" + std::to_string(this->getId()) + ")\n    * " + this->intersectionTester.toString();
     }
 };
-
-//void CollidingParticle::setRunner(CollisionDetectionDemoRunner *runner) {
-//    this->runner = runner;
-//}
-
-//void CollidingParticle::afterIntegrate(real dt) {
-//    if (runner != null) {
-//        runner->afterIntegrate(this);
-//    }
-//}
-//
-//void CollidingParticle::onCollision(const ParticleContact &contact) {
-//    if (runner != null) {
-//        runner->onCollision(this);
-//    }
-//
-//}
 
 class CollisionDetectionPlayground: public Playground {
 public:
