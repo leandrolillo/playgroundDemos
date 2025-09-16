@@ -236,7 +236,6 @@ public:
   }
 
   virtual LoopResult doLoop() override {
-    defaultRenderer.clear();
     defaultRenderer.drawAxes(matriz_4x4::identidad);
 
     // draw avatar
@@ -265,7 +264,6 @@ public:
 
     terrainRenderer.render(camera);
     skyboxRenderer.render(camera);
-    defaultRenderer.render(camera);
 
     inputController->update(this->getStopWatch().getElapsedTime());
 

@@ -55,30 +55,25 @@ public:
 //        	logger->error("Could not load mesh collection");
 //        	return false;
 //        }
-    if ((carMesh = (MeshResource*) this->getResourceManager().load(
-        "roadFighter/corvette.obj/chevrolet_corvete", MimeTypes::MESH,
-        std::set<String> { }, std::map<String, String> { { "texture-filter",
-            "nearest" } })) == null) {
+    if ((carMesh = (MeshResource*) this->getResourceManager().load("corvette.obj/chevrolet_corvete", MimeTypes::MESH,
+        std::set<String> { }, std::map<String, String> { { "texture-filter", "nearest" } })) == null) {
       logger->error("Could not load car mesh");
       return false;
     }
 
-    if ((texturedBoxMesh = (MeshResource*) this->getResourceManager().load(
-        "roadFighter/texturedCube.obj/Cube", MimeTypes::MESH,
-        std::set<String> { }, std::map<String, String> { { "texture-filter",
-            "nearest" } })) == null) {
+    if ((texturedBoxMesh = (MeshResource*) this->getResourceManager().load("texturedCube.obj/Cube", MimeTypes::MESH,
+        std::set<String> { }, std::map<String, String> { { "texture-filter", "nearest" } })) == null) {
       logger->error("Could not load textured box mesh");
       return false;
     }
 
-    if ((axesMesh = (MeshResource*) this->getResourceManager().load(
-        "roadFighter/axes.obj/Axes", MimeTypes::MESH, std::set<String> { },
-        std::map<String, String> { { "texture-filter", "nearest" } })) == null) {
+    if ((axesMesh = (MeshResource*) this->getResourceManager().load("axes.obj/Axes", MimeTypes::MESH,
+        std::set<String> { }, std::map<String, String> { { "texture-filter", "nearest" } })) == null) {
       logger->error("Could not load axes model");
       return false;
     }
 
-    backgroundMusic = this->audio->createSource("roadFighter/background.ogg",
+    backgroundMusic = this->audio->createSource("background.ogg",
         vector(0, 0, 0), vector(0, 0, 0), true);
     audio->playSource(backgroundMusic);
 
@@ -86,7 +81,6 @@ public:
   }
 
   LoopResult doLoop() override {
-    defaultRenderer.clear();
 //        defaultRenderer.drawAxes(matriz_4x4::identidad);
 
     defaultRenderer.drawObject(matrix_4x4::identidad, carVertexArray);
@@ -95,8 +89,6 @@ public:
     defaultRenderer.drawObject(matrix_4x4::traslacion(0, 4, -3),
         texturedBoxMesh);
     defaultRenderer.drawObject(matrix_4x4::traslacion(0, 0, -3), carMesh);
-
-    defaultRenderer.render(camera);
 
     return LoopResult::CONTINUE;
   }
@@ -169,7 +161,7 @@ public:
 };
 
 int main(int argc, char **argv) {
-  String repository = Paths::add(Paths::getDirname(argv[0]), "resources"); //assumes executable lies in playground/target folder
+  String repository = Paths::add(Paths::getDirname(argv[0]), "resources");
   RoadFighter playground(repository);
   playground.withName("Road Fighter");
   printf("\n\nRunning playground [%s]\n", playground.toString().c_str());

@@ -187,7 +187,6 @@ class PhysicsDemoRunner: public BaseDemoRunner {
     //elapsedTime += dt;
     //logger->info("Elapsed Time: %.3f=%.3f, dt=%.6f", getStopWatch().getTotalTime(), elapsedTime, dt);
 
-    defaultRenderer.clear();
     defaultRenderer.drawAxes(matriz_4x4::identidad);
 //    defaultRenderer.drawLine(matriz_4x4::identidad, vector(-1, 0, 0), vector(1, 0, 0));
 //    defaultRenderer.drawLine(matriz_4x4::identidad, vector(0, -1, 0), vector(0, 1, 0));
@@ -225,7 +224,6 @@ class PhysicsDemoRunner: public BaseDemoRunner {
     }
 
 
-    defaultRenderer.render(camera);
     skyboxRenderer.render(camera);
     gridRenderer.render(camera);
 
