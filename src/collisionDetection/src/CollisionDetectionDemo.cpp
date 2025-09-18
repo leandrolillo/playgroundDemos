@@ -166,36 +166,35 @@ public:
       return LoopResult::CONTINUE;
     }
 
-    void onMouseMove(int x, int y, int dx, int dy, unsigned int buttons) override {
-            Line line(camera.getPosition(),
-                    camera.getRayDirection((unsigned int) x, (unsigned int) y, video->getScreenWidth(), video->getScreenHeight()));
+  void onMouseMove(int x, int y, int dx, int dy, unsigned int buttons) override {
+    Line line(camera.getPosition(),
+        camera.unproject((unsigned int) x, (unsigned int) y, video->getScreenWidth(), video->getScreenHeight()).normalizado());
 
-            if (!equalsZeroAbsoluteMargin(line.getDirection().z)) {
-                for(auto &particle : collidingParticles) {
+    if (!equalsZeroAbsoluteMargin(line.getDirection().z)) {
+      for (auto &particle : collidingParticles) {
+        if (particle->isSelected()) {
+          vector origin = particle->getBoundingVolume().getOrigin();
 
-                if (particle->isSelected()) {
-                    vector origin = particle->getBoundingVolume().getOrigin();
-
-                    real t = (origin.z - line.getOrigin().z) / line.getDirection().z;
-                    particle->setPosition(line.getOrigin() + t * line.getDirection());
-                }
-            }
+          real t = (origin.z - line.getOrigin().z) / line.getDirection().z;
+          particle->setPosition(line.getOrigin() + t * line.getDirection());
         }
+      }
     }
+  }
 
-    void onMouseButtonUp(unsigned char button, int x, int y) override {
-        if (button == SDL_BUTTON_LEFT) {
-            for (auto &particle : collidingParticles) {
-                particle->setSelected(false);
-            }
-        }
+  void onMouseButtonUp(unsigned char button, int x, int y) override {
+    if (button == SDL_BUTTON_LEFT) {
+      for (auto &particle : collidingParticles) {
+        particle->setSelected(false);
+      }
     }
+  }
 
-	void onMouseWheel(int wheel) override {
-		logger->debug("Mouse wheel %d", wheel);
-		camera.setPosition(camera.getPosition() - vector(0.0, 0.0, std::min(1.0, 0.1 * wheel)));
-		logger->debug("Camera position: %s", camera.getPosition().toString().c_str());
-	}
+  void onMouseWheel(int wheel) override {
+    logger->debug("Mouse wheel %d", wheel);
+    camera.setPosition(camera.getPosition() - vector(0.0, 0.0, std::min(1.0, 0.1 * wheel)));
+    logger->debug("Camera position: %s", camera.getPosition().toString().c_str());
+  }
 
 
     void onMouseButtonDown(unsigned char button, int x, int y) override {
@@ -203,7 +202,7 @@ public:
             this->startPosition = vector2(x, y);
 
             Line line(camera.getPosition(),
-                    camera.getRayDirection((unsigned int) x, (unsigned int) y, video->getScreenWidth(), video->getScreenHeight()));
+                    camera.unproject((unsigned int) x, (unsigned int) y, video->getScreenWidth(), video->getScreenHeight()).normalizado());
 
             for(auto &particle : collidingParticles) {
                 if (intersectionTester.intersects(particle->getBoundingVolume(), (Geometry &)line)) {

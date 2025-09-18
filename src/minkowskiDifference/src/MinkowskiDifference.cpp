@@ -47,8 +47,11 @@ class MinkowskiDifferenceRunner: public BaseDemoRunner {
   CollisionTester intersectionTester;
   GeometryRenderer geometryRenderer;
 
-  SelectableGeometry left {std::make_unique<AABB>(vector(0, 0, 0), vector(100, 100, 10))};
-  SelectableGeometry right {std::make_unique<AABB>(vector(0, 0, 0), vector(100, 200, 10))};
+  SelectableGeometry left {std::make_unique<AABB>(vector(0, 0, 0), vector(40, 40, 50))};
+  SelectableGeometry right {std::make_unique<AABB>(vector(0, 0, 0), vector(40, 80, 50))};
+
+  AABB md { vector(0, 0, 0), vector(0, 0, 0)};
+
 
   const MaterialResource red {vector(1, 0, 0), vector(1, 0, 0), vector(1, 0, 0), 1.0, 0.5};
   const MaterialResource green {vector(0, 1, 0), vector(0, 1, 0), vector(0, 1, 0), 0.5};
@@ -83,6 +86,9 @@ public:
 
     left.setPosition(vector(0, 0, 0));
     right.setPosition(vector(0, 0, 0));
+
+    md = ((AABB &)left.getGeometry()).minkowskiDifference((AABB &)right.getGeometry());
+
   }
 
   LoopResult doLoop() override {
@@ -91,8 +97,6 @@ public:
 
     right.isSelected() ? defaultRenderer.setMaterial(&red) : defaultRenderer.setMaterial(&green);
     geometryRenderer.render(right.getGeometry());
-
-    AABB md = ((AABB &)left.getGeometry()).minkowskiDifference((AABB &)right.getGeometry());
 
     md.contains(vector(0, 0, 0)) ? defaultRenderer.setMaterial(&red) : defaultRenderer.setMaterial(&white);
     geometryRenderer.render(md);
@@ -109,8 +113,13 @@ public:
     if (button == SDL_BUTTON_LEFT) {
       this->startPosition = vector2(x, y);
 
-      Line line(camera.getPosition(),
-          camera.getRayDirection((unsigned int) x, (unsigned int) y, video->getScreenWidth(), video->getScreenHeight()));
+      //TODO: We should find a way to conciliate mouse picking in persepective projection and orthographic projection.
+      //Line line(vector(x, y, camera.getPosition().z), -camera.getOrientation().columna(2));
+
+      vector origin = camera.unproject(x, y, video->getScreenWidth(), video->getScreenHeight());
+      origin.z = -origin.z;
+      vector direction = vector(0, 0, -1);
+      Line line(origin, direction);
 
       if (intersectionTester.intersects(left.getGeometry(), (Geometry&) line)) {
         left.select();
@@ -137,7 +146,26 @@ public:
 
   virtual void onMouseMove(int x, int y, int dx, int dy, unsigned int buttons) override {
     if (dx != 0 || dy != 0) {
-      ;
+      vector origin = camera.unproject(x, y, video->getScreenWidth(), video->getScreenHeight());
+      origin.z = -origin.z;
+      vector direction = vector(0, 0, -1);
+      Line line(origin, direction);
+
+      if (!equalsZeroAbsoluteMargin(line.getDirection().z)) {
+        if(left.isSelected()) {
+          vector origin = left.getPosition();
+          real t = (origin.z - line.getOrigin().z) / line.getDirection().z;
+          left.setPosition(line.getOrigin() + t * line.getDirection());
+          md = ((AABB &)left.getGeometry()).minkowskiDifference((AABB &)right.getGeometry());
+        }
+
+        if(right.isSelected()) {
+          vector origin = right.getPosition();
+          real t = (origin.z - line.getOrigin().z) / line.getDirection().z;
+          right.setPosition(line.getOrigin() + t * line.getDirection());
+          md = ((AABB &)left.getGeometry()).minkowskiDifference((AABB &)right.getGeometry());
+        }
+      }
     }
   }
 
@@ -148,31 +176,47 @@ public:
     switch (key) {
     case SDLK_LEFT:
       left.setPosition(left.getPosition() + vector(-10, 0, 0));
+      md = ((AABB &)left.getGeometry()).minkowskiDifference((AABB &)right.getGeometry());
       break;
     case SDLK_RIGHT:
       left.setPosition(left.getPosition() + vector(10, 0, 0));
+      md = ((AABB &)left.getGeometry()).minkowskiDifference((AABB &)right.getGeometry());
       break;
     case SDLK_UP:
       left.setPosition(left.getPosition() + vector(0, 10, 0));
+      md = ((AABB &)left.getGeometry()).minkowskiDifference((AABB &)right.getGeometry());
       break;
     case SDLK_DOWN:
       left.setPosition(left.getPosition() + vector(0, -10, 0));
+      md = ((AABB &)left.getGeometry()).minkowskiDifference((AABB &)right.getGeometry());
       break;
 
     case SDLK_A:
       right.setPosition(right.getPosition() + vector(-10, 0, 0));
+      md = ((AABB &)left.getGeometry()).minkowskiDifference((AABB &)right.getGeometry());
       break;
     case SDLK_D:
       right.setPosition(right.getPosition() + vector(10, 0, 0));
+      md = ((AABB &)left.getGeometry()).minkowskiDifference((AABB &)right.getGeometry());
       break;
     case SDLK_W:
       right.setPosition(right.getPosition() + vector(0, 10, 0));
+      md = ((AABB &)left.getGeometry()).minkowskiDifference((AABB &)right.getGeometry());
       break;
     case SDLK_S:
       right.setPosition(right.getPosition() + vector(0, -10, 0));
+      md = ((AABB &)left.getGeometry()).minkowskiDifference((AABB &)right.getGeometry());
       break;
-
     case SDLK_SPACE:
+      if(md.contains(vector(0, 0, 0))) {
+        vector penetrationVector = md.closestSurfacePoint(vector(0, 0, 0));
+        logger->info("Penetration Vector: %s", penetrationVector.toString().c_str());
+
+        right.setPosition(right.getPosition() + penetrationVector);
+        md = ((AABB &)left.getGeometry()).minkowskiDifference((AABB &)right.getGeometry());
+      }
+      break;
+    case SDLK_BACKSPACE:
         reset();
         break;
       default:
