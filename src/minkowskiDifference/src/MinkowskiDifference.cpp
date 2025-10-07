@@ -88,7 +88,6 @@ public:
     right.setPosition(vector(0, 0, 0));
 
     md = ((AABB &)left.getGeometry()).minkowskiDifference((AABB &)right.getGeometry());
-
   }
 
   LoopResult doLoop() override {
@@ -98,23 +97,29 @@ public:
     right.isSelected() ? defaultRenderer.setMaterial(&red) : defaultRenderer.setMaterial(&green);
     geometryRenderer.render(right.getGeometry());
 
-    md.contains(vector(0, 0, 0)) ? defaultRenderer.setMaterial(&red) : defaultRenderer.setMaterial(&white);
+    if(md.contains(vector(0, 0, 0))) {
+      vector penetrationVector = md.closestSurfacePoint(vector(0, 0, 0));
+      defaultRenderer.setMaterial(&white);
+      defaultRenderer.drawLine(matriz::identidad, left.getPosition(), left.getPosition() + penetrationVector);
+
+      defaultRenderer.setMaterial(&red);
+    } else {
+      defaultRenderer.setMaterial(&white);
+    }
     geometryRenderer.render(md);
+
 
     return LoopResult::CONTINUE;
   }
 
   virtual void onResize(unsigned int height, unsigned int width) override {
     //camera.setPerspectiveProjectionFov(45.0, (GLfloat) width / (GLfloat) height, 0.1, zMax);
-    camera.setOrthographicProjection(height, width, zMin, zMax);
+    camera.setOrthographicProjection(width, height, zMin, zMax);
   }
 
   void onMouseButtonDown(unsigned char button, int x, int y) override {
     if (button == SDL_BUTTON_LEFT) {
       this->startPosition = vector2(x, y);
-
-      //TODO: We should find a way to conciliate mouse picking in persepective projection and orthographic projection.
-      //Line line(vector(x, y, camera.getPosition().z), -camera.getOrientation().columna(2));
 
       vector origin = camera.unproject(x, y, video->getScreenWidth(), video->getScreenHeight());
       origin.z = -origin.z;

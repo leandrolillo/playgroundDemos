@@ -33,3 +33,7 @@ public:
     renderer.setTexture(previousTexture);
   }
 };
+
+class Brick: public Entity {
+  unsigned int hitsLeft;
+};

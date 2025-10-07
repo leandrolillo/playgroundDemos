@@ -101,6 +101,8 @@ public:
             collidingParticles[4]->setMass(1);
             collidingParticles[4]->setVelocity(vector(0, 0, 0));
         }
+
+        particleManager.detectCollisions();
     }
 
     bool initialize() override {
@@ -154,7 +156,6 @@ public:
       defaultRenderer.drawLine(matriz_4x4::identidad, vector(0, -1, 0), vector(0, 1, 0));
       defaultRenderer.drawLine(matriz_4x4::identidad, vector(0, 0, -1), vector(0, 0, 1));
 
-      particleManager.detectCollisions();
       std::vector<ParticleContact> contacts = particleManager.getContacts();
 
       particleManagerRenderer.render(particleManager);
@@ -171,13 +172,19 @@ public:
         camera.unproject((unsigned int) x, (unsigned int) y, video->getScreenWidth(), video->getScreenHeight()).normalizado());
 
     if (!equalsZeroAbsoluteMargin(line.getDirection().z)) {
+      bool somethingMoved = false;
       for (auto &particle : collidingParticles) {
         if (particle->isSelected()) {
           vector origin = particle->getBoundingVolume().getOrigin();
 
           real t = (origin.z - line.getOrigin().z) / line.getDirection().z;
           particle->setPosition(line.getOrigin() + t * line.getDirection());
+          somethingMoved = true;
         }
+      }
+
+      if(somethingMoved) {
+        particleManager.detectCollisions();
       }
     }
   }
@@ -239,6 +246,7 @@ public:
 							break;
 					case SDLK_SPACE:
 						particleManager.resolveContacts(this->getStopWatch().getElapsedTime());
+						particleManager.detectCollisions();
 							break;
 					case 'w':
 					case 'W':

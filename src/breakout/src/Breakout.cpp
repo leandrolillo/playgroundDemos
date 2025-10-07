@@ -10,8 +10,13 @@ constexpr real zMax = 1000;
 
 static std::mt19937 mtRNE(std::chrono::system_clock::now().time_since_epoch().count()); //random number engine
 
-real WALL_DEPTH = 10;
-real PADDLE_VELOCITY = 100.0;
+constexpr real WALL_DEPTH = 10;
+constexpr real PADDLE_VELOCITY = 100.0;
+
+constexpr unsigned int BRICK_WIDTH = 30;
+constexpr unsigned int BRICK_HEIGHT = 10;
+constexpr unsigned int BRICK_ROWS = 10;
+constexpr unsigned int BRICK_COLUMNS = 20;
 
 
 class BreakoutRunner: public BaseDemoRunner {
@@ -23,6 +28,8 @@ class BreakoutRunner: public BaseDemoRunner {
   Background background;
   Particle *ball;
   Particle *paddle;
+
+  std::vector<AABB *>bricks;
 
   GeometryRenderer geometryRenderer;
 
@@ -68,6 +75,17 @@ public:
     //ball->setMass(1.0);
     //ball->setDamping(1.0);
 
+
+    for(unsigned int i = 0; i < BRICK_ROWS; i++) {
+      for(unsigned int j = 0; j < BRICK_COLUMNS; j++) {
+        this->bricks.push_back((AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(BRICK_WIDTH * 0.5, BRICK_HEIGHT * 0.5, 5))));
+        this->bricks.back()->setOnCollisionHandler([brick=bricks.back()](GeometryContact &contact) { brick->setStatus(false); });
+
+      }
+    }
+
+
+
     reset();
 
     return true;
@@ -104,6 +122,12 @@ public:
     geometryRenderer.render(ball->getBoundingVolume());
     geometryRenderer.render(paddle->getBoundingVolume());
 
+    for(auto &brick : bricks) {
+      if(brick->getStatus()) {
+        geometryRenderer.render(*brick);
+      }
+    }
+
     geometryRenderer.render(top->getBoundingVolume());
     geometryRenderer.render(bottom->getBoundingVolume());
     geometryRenderer.render(left->getBoundingVolume());
@@ -115,27 +139,38 @@ public:
 
   virtual void onResize(unsigned int height, unsigned int width) override {
     //camera.setPerspectiveProjectionFov(45.0, (GLfloat) width / (GLfloat) height, 0.1, zMax);
-    camera.setOrthographicProjection(height, width, zMin, zMax);
+    camera.setOrthographicProjection(width, height, zMin, zMax);
     background.resize(width, height);
 
     real wallHalfDepth = WALL_DEPTH * 0.5;
 
-    top->setPosition(vector(0, height * 0.5 + wallHalfDepth, 0));
+    top->setPosition(vector(0, height * 0.51 + wallHalfDepth, 0));
     ((AABB &)top->getBoundingVolume()).setHalfSizes(vector(width * 0.5, wallHalfDepth, wallHalfDepth));
 
-    bottom->setPosition(vector(0, height * -0.5 - wallHalfDepth, 0));
+    bottom->setPosition(vector(0, height * -0.51 - wallHalfDepth, 0));
     ((AABB &)bottom->getBoundingVolume()).setHalfSizes(vector(width * 0.5, wallHalfDepth, wallHalfDepth));
 
-    left->setPosition(vector(width * -0.5 - wallHalfDepth, 0, 0));
+    left->setPosition(vector(width * -0.51 - wallHalfDepth, 0, 0));
     ((AABB &)left->getBoundingVolume()).setHalfSizes(vector(wallHalfDepth, height * 0.5, wallHalfDepth));
 
-    right->setPosition(vector(width * 0.5 + + wallHalfDepth, 0, 0));
+    right->setPosition(vector(width * 0.51 + + wallHalfDepth, 0, 0));
     ((AABB &)right->getBoundingVolume()).setHalfSizes(vector(wallHalfDepth, height *  0.5, wallHalfDepth));
 
     paddle->setPosition(vector(
         paddle->getPosition().x,
         height * -0.5 + 2.0 * ((AABB &)paddle->getBoundingVolume()).getHalfSizes().y,
         paddle->getPosition().z));
+
+
+    int left = -((int)BRICK_COLUMNS >> 1) * (int)BRICK_WIDTH;
+    int bottom = ((int)height >> 1) - (int)(BRICK_ROWS + 4) * (int)BRICK_HEIGHT;
+
+    int margin = 1;
+    for(unsigned int i = 0; i < BRICK_ROWS; i++) {
+      for(unsigned int j = 0; j < BRICK_COLUMNS; j++) {
+        this->bricks[i * BRICK_COLUMNS + j]->setPosition(vector(left + (int)j * (margin + (int)BRICK_WIDTH), bottom + (int)i * (margin + (int)BRICK_HEIGHT), -5));
+      }
+    }
 
     //((AABB &)paddle->getBoundingVolume()).getHalfSizes().y + 10.0
   }

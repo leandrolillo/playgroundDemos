@@ -7,6 +7,8 @@ type summary add -s "origin:${var.origin}, radius:${var.radius}" Sphere
 type summary add -s "origin:${var.origin}, normal:${var.normal}" Plane
 type summary add -s "origin:${var.origin}, direction:${var.direction}" Line
 
+type summary add -s "boundingVolume:${var.boundingVolume}, m:${var.mass}, v:${var.velocity}, a:${var.acceleration}" Particle
+
 type summary add -s "${var.filename} ${var.line}:${var.column}" FileParser
 type summary add -s "${var.fileParser.filename} ${var.fileParser.line}:${var.fileParser.column}" JsonParser
 
