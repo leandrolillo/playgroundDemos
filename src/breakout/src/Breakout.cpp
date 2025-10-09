@@ -4,20 +4,17 @@
 #include<random>
 
 #include "Entities.h"
+#include "BreakoutLevelAdapter.h"
 
 constexpr real zMin = -1000;
 constexpr real zMax = 1000;
 
 static std::mt19937 mtRNE(std::chrono::system_clock::now().time_since_epoch().count()); //random number engine
 
-constexpr real WALL_DEPTH = 10;
-constexpr real PADDLE_VELOCITY = 100.0;
-
-constexpr unsigned int BRICK_WIDTH = 30;
-constexpr unsigned int BRICK_HEIGHT = 10;
-constexpr unsigned int BRICK_ROWS = 10;
-constexpr unsigned int BRICK_COLUMNS = 20;
-
+constexpr real DEPTH = 10;
+constexpr real PADDLE_VELOCITY = 200.0;
+constexpr real PADDLE_WIDTH = 60;
+constexpr real PADDLE_HEIGHT = 10;
 
 class BreakoutRunner: public BaseDemoRunner {
   PhysicsRunner *physics = null;
@@ -26,9 +23,10 @@ class BreakoutRunner: public BaseDemoRunner {
   MeshResource *basketball = null;
 
   Background background;
-  Particle *ball;
-  Particle *paddle;
+  Particle *ball = null;
+  Particle *paddle = null;
 
+  BreakoutLevel *level = null;
   std::vector<AABB *>bricks;
 
   GeometryRenderer geometryRenderer;
@@ -47,6 +45,8 @@ public:
     if (!BaseDemoRunner::initialize()) {
       return false;
     }
+
+    this->getResourceManager().addAdapter(std::make_unique<BreakoutLevelAdapter>());
 
     TextureResource *backgroundTexture = (TextureResource *)this->getResourceManager().load("background.png", MimeTypes::TEXTURE);
     if(backgroundTexture != null) {
@@ -71,16 +71,24 @@ public:
     /*Ball*/
     ball = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(vector(0, 0, 0), 10)));
 
-    paddle = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(vector(0, 0, 0), vector(30, 10, 10))));
+    paddle = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(vector(0, 0, 0), vector(PADDLE_WIDTH, PADDLE_HEIGHT, DEPTH * 0.5))));
     //ball->setMass(1.0);
     //ball->setDamping(1.0);
 
 
-    for(unsigned int i = 0; i < BRICK_ROWS; i++) {
-      for(unsigned int j = 0; j < BRICK_COLUMNS; j++) {
-        this->bricks.push_back((AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(BRICK_WIDTH * 0.5, BRICK_HEIGHT * 0.5, 5))));
-        this->bricks.back()->setOnCollisionHandler([brick=bricks.back()](GeometryContact &contact) { brick->setStatus(false); });
 
+    level = (BreakoutLevel *)getResourceManager().load("level-0.json", BreakoutLevel::MimeType);
+
+    if(level) {
+      for(unsigned int i = 0; i < level->getRows(); i++) {
+        for(unsigned int j = 0; j < level->getColumns(); j++) {
+          this->bricks.push_back((AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 1, 1))));
+          this->bricks.back()->setOnCollisionHandler([brick=bricks.back()](GeometryContact &contact) { brick->setStatus(false); });
+
+          if(level->getBrickAt(i, j) == 0) {
+            this->bricks.back()->setStatus(false);
+          }
+        }
       }
     }
 
@@ -91,30 +99,68 @@ public:
     return true;
   }
 
+  virtual void onResize(unsigned int height, unsigned int width) override {
+    camera.setOrthographicProjection(width, height, zMin, zMax);
+    background.resize(width, height);
+
+    real halfDepth = DEPTH * 0.5;
+
+    top->setPosition(vector(0, height * 0.51 + halfDepth, 0));
+    ((AABB &)top->getBoundingVolume()).setHalfSizes(vector(width * 0.5, halfDepth, halfDepth));
+
+    bottom->setPosition(vector(0, height * -0.51 - halfDepth, 0));
+    ((AABB &)bottom->getBoundingVolume()).setHalfSizes(vector(width * 0.5, halfDepth, halfDepth));
+
+    left->setPosition(vector(width * -0.51 - halfDepth, 0, 0));
+    ((AABB &)left->getBoundingVolume()).setHalfSizes(vector(halfDepth, height * 0.5, halfDepth));
+
+    right->setPosition(vector(width * 0.51 + + halfDepth, 0, 0));
+    ((AABB &)right->getBoundingVolume()).setHalfSizes(vector(halfDepth, height *  0.5, halfDepth));
+
+    paddle->setPosition(vector(
+        paddle->getPosition().x,
+        height * -0.5 + 2.0 * ((AABB &)paddle->getBoundingVolume()).getHalfSizes().y,
+        paddle->getPosition().z));
+
+
+    if(level) {
+      int margin = 1;
+
+      int brick_height = height * 0.75 / level->getRows() - margin;
+      int brick_width = width / level->getColumns() - margin;
+
+      int left = -((int)width >> 1) + (width - (brick_width + margin) * level->getColumns()) / 2; //centered
+      int bottom = ((int)height >> 1) - (int)level->getRows() * ((int)brick_height + margin);
+
+      for(unsigned int i = 0; i < level->getRows(); i++) {
+        for(unsigned int j = 0; j < level->getColumns(); j++) {
+          this->bricks[i * level->getColumns() + j]->setHalfSizes(vector((int)brick_width >> 1, (int)brick_height >> 1, halfDepth));
+          this->bricks[i * level->getColumns() + j]->setPosition(vector(left + (int)j * (margin + (int)brick_width), bottom + (int)i * (margin + (int)brick_height), -halfDepth));
+        }
+      }
+    }
+  }
 
   bool reset() {
-    camera.setPosition(vector(0, -5, -10));
+    camera.setPosition(vector(0, 0, -10));
 
-    std::uniform_int_distribution<int> distribution(0, 360);
+    std::uniform_int_distribution<int> distribution(10, 170);
     real angulo = distribution(mtRNE);
     real modulo = distribution(mtRNE) * 10;
 
-    logger->info("Ball random values - angle [%.2f], module [%.2f]", angulo, modulo);
-    ball->setPosition(vector(0, 0, 0));
+    //logger->info("Ball random values - angle [%.2f], module [%.2f]", angulo, modulo);
+    real ballY = paddle->getPosition().y + ((AABB &)paddle->getBoundingVolume()).getHalfSizes().y + ((Sphere &)ball->getBoundingVolume()).getRadius();
+    ball->setPosition(vector(0, ballY, 0));
     ball->setVelocity(vector(modulo * cos(radian(angulo)), modulo * sin(radian(angulo)), 0));
 
     paddle->setPosition(vector(0, paddle->getPosition().y, 0));
     paddle->setVelocity(vector(0, 0, 0));
     paddle->setInverseMass(0.0);
-
   }
 
-  LoopResult doLoop() override {
-    //logger->info("Ball: [%s] velocity [%s]", ball->getPosition().toString().c_str(), ball->getVelocity().toString().c_str());
-    //defaultRenderer.clear();
-    //defaultRenderer.setLight(&light);
-//    defaultRenderer.drawAxes(matriz_4x4::identidad);
 
+
+  LoopResult doLoop() override {
     background.draw(defaultRenderer);
 
     defaultRenderer.drawObject(matriz_4x4::traslacion(ball->getBoundingVolume().getOrigin()) * matriz_4x4::zoom(0.1, 0.1, 0.1), basketball);
@@ -133,46 +179,7 @@ public:
     geometryRenderer.render(left->getBoundingVolume());
     geometryRenderer.render(right->getBoundingVolume());
 
-    //defaultRenderer.render(camera);
     return LoopResult::CONTINUE;
-  }
-
-  virtual void onResize(unsigned int height, unsigned int width) override {
-    //camera.setPerspectiveProjectionFov(45.0, (GLfloat) width / (GLfloat) height, 0.1, zMax);
-    camera.setOrthographicProjection(width, height, zMin, zMax);
-    background.resize(width, height);
-
-    real wallHalfDepth = WALL_DEPTH * 0.5;
-
-    top->setPosition(vector(0, height * 0.51 + wallHalfDepth, 0));
-    ((AABB &)top->getBoundingVolume()).setHalfSizes(vector(width * 0.5, wallHalfDepth, wallHalfDepth));
-
-    bottom->setPosition(vector(0, height * -0.51 - wallHalfDepth, 0));
-    ((AABB &)bottom->getBoundingVolume()).setHalfSizes(vector(width * 0.5, wallHalfDepth, wallHalfDepth));
-
-    left->setPosition(vector(width * -0.51 - wallHalfDepth, 0, 0));
-    ((AABB &)left->getBoundingVolume()).setHalfSizes(vector(wallHalfDepth, height * 0.5, wallHalfDepth));
-
-    right->setPosition(vector(width * 0.51 + + wallHalfDepth, 0, 0));
-    ((AABB &)right->getBoundingVolume()).setHalfSizes(vector(wallHalfDepth, height *  0.5, wallHalfDepth));
-
-    paddle->setPosition(vector(
-        paddle->getPosition().x,
-        height * -0.5 + 2.0 * ((AABB &)paddle->getBoundingVolume()).getHalfSizes().y,
-        paddle->getPosition().z));
-
-
-    int left = -((int)BRICK_COLUMNS >> 1) * (int)BRICK_WIDTH;
-    int bottom = ((int)height >> 1) - (int)(BRICK_ROWS + 4) * (int)BRICK_HEIGHT;
-
-    int margin = 1;
-    for(unsigned int i = 0; i < BRICK_ROWS; i++) {
-      for(unsigned int j = 0; j < BRICK_COLUMNS; j++) {
-        this->bricks[i * BRICK_COLUMNS + j]->setPosition(vector(left + (int)j * (margin + (int)BRICK_WIDTH), bottom + (int)i * (margin + (int)BRICK_HEIGHT), -5));
-      }
-    }
-
-    //((AABB &)paddle->getBoundingVolume()).getHalfSizes().y + 10.0
   }
 
   virtual void onMouseWheel(int wheel) override {
