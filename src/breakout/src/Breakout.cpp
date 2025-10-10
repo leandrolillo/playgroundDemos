@@ -12,7 +12,10 @@ constexpr real zMax = 1000;
 static std::mt19937 mtRNE(std::chrono::system_clock::now().time_since_epoch().count()); //random number engine
 
 constexpr real DEPTH = 10;
-constexpr real PADDLE_VELOCITY = 200.0;
+
+//TODO: move this to levels
+constexpr real BALL_VELOCITY = 500; //pixels per second
+constexpr real PADDLE_VELOCITY = 300.0; //pixels per second
 constexpr real PADDLE_WIDTH = 60;
 constexpr real PADDLE_HEIGHT = 10;
 
@@ -128,28 +131,30 @@ public:
       int brick_width = width / level->getColumns() - margin;
 
       int left = -((int)width >> 1) + (width - (brick_width + margin) * level->getColumns()) / 2; //centered
-      int bottom = ((int)height >> 1) - (int)level->getRows() * ((int)brick_height + margin);
+      int top = ((int)height >> 1) - brick_height + margin;
 
       for(unsigned int i = 0; i < level->getRows(); i++) {
         for(unsigned int j = 0; j < level->getColumns(); j++) {
           this->bricks[i * level->getColumns() + j]->setHalfSizes(vector((int)brick_width >> 1, (int)brick_height >> 1, halfDepth));
-          this->bricks[i * level->getColumns() + j]->setPosition(vector(left + (int)j * (margin + (int)brick_width), bottom + (int)i * (margin + (int)brick_height), -halfDepth));
+          this->bricks[i * level->getColumns() + j]->setPosition(vector(left + (int)j * (margin + (int)brick_width), top - (int)i * (margin + (int)brick_height), -halfDepth));
         }
       }
     }
   }
 
+  std::uniform_real_distribution<real> directionDistribution {10, 170};
+  std::uniform_real_distribution<real> speedDistribution {-100, 100};
+
   bool reset() {
     camera.setPosition(vector(0, 0, -10));
 
-    std::uniform_int_distribution<int> distribution(10, 170);
-    real angulo = distribution(mtRNE);
-    real modulo = distribution(mtRNE) * 10;
+    real direction = directionDistribution(mtRNE);
+    real speed = BALL_VELOCITY + speedDistribution(mtRNE);
 
     //logger->info("Ball random values - angle [%.2f], module [%.2f]", angulo, modulo);
     real ballY = paddle->getPosition().y + ((AABB &)paddle->getBoundingVolume()).getHalfSizes().y + ((Sphere &)ball->getBoundingVolume()).getRadius();
     ball->setPosition(vector(0, ballY, 0));
-    ball->setVelocity(vector(modulo * cos(radian(angulo)), modulo * sin(radian(angulo)), 0));
+    ball->setVelocity(vector(speed * cos(radian(direction)), speed * sin(radian(direction)), 0));
 
     paddle->setPosition(vector(0, paddle->getPosition().y, 0));
     paddle->setVelocity(vector(0, 0, 0));
