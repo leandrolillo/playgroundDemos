@@ -32,15 +32,16 @@ class BreakoutRunner: public BaseDemoRunner {
   GeometryRenderer geometryRenderer;
 
   //Level limits
-  Particle *top = null;
-  Particle *bottom = null;
-  Particle *left = null;
-  Particle *right = null;
+  AABB *top = null;
+  AABB *bottom = null;
+  AABB *left = null;
+  AABB *right = null;
 public:
-  BreakoutRunner() : background(0, 0), geometryRenderer(defaultRenderer),
-  light(vector(0, 0, 0), vector(1, 1, 1), vector(1, 1, 1), vector(1, 1, 1), 1.0f) {
-
+  BreakoutRunner() :  background(0, 0),
+                      geometryRenderer(defaultRenderer),
+                      light(vector(0, 0, 0), vector(1, 1, 1), vector(1, 1, 1), vector(1, 1, 1), 1.0f) {
   }
+
   bool initialize() override {
     if (!BaseDemoRunner::initialize()) {
       return false;
@@ -57,23 +58,20 @@ public:
 
     physics = (PhysicsRunner*) this->getContainer()->getRequiredRunner(PhysicsRunner::ID);
     ParticleManager &particleManager = physics->getParticleManager();
+    particleManager.getCollisionDetector().setRestitution(1.0);
 
     /*Level limits*/
-    top = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(vector(0, 0, 0), vector(2, 1, 0.1))));
-    top->setInverseMass(0);
-    bottom = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(vector(0, 0, 0), vector(2, 1, 0.1))));
-    bottom->setInverseMass(0);
-    left = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 2, 0.1))));
-    left->setInverseMass(0);
-    right = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 2, 0.1))));
-    right->setInverseMass(0);
+    top = (AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(2, 1, 0.1)));
+    bottom = (AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(2, 1, 0.1)));
+    left = (AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 2, 0.1)));
+    right = (AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 2, 0.1)));
 
     /*Ball*/
     ball = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(vector(0, 0, 0), 10)));
 
     paddle = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(vector(0, 0, 0), vector(PADDLE_WIDTH, PADDLE_HEIGHT, DEPTH * 0.5))));
     //ball->setMass(1.0);
-    //ball->setDamping(1.0);
+    ball->setDamping(1.0);
 
 
 
@@ -105,17 +103,17 @@ public:
 
     real halfDepth = DEPTH * 0.5;
 
-    top->setPosition(vector(0, height * 0.51 + halfDepth, 0));
-    ((AABB &)top->getBoundingVolume()).setHalfSizes(vector(width * 0.5, halfDepth, halfDepth));
+    top->setOrigin(vector(0, height * 0.51 + halfDepth, 0));
+    top->setHalfSizes(vector(width * 0.5, halfDepth, halfDepth));
 
-    bottom->setPosition(vector(0, height * -0.51 - halfDepth, 0));
-    ((AABB &)bottom->getBoundingVolume()).setHalfSizes(vector(width * 0.5, halfDepth, halfDepth));
+    bottom->setOrigin(vector(0, height * -0.51 - halfDepth, 0));
+    bottom->setHalfSizes(vector(width * 0.5, halfDepth, halfDepth));
 
-    left->setPosition(vector(width * -0.51 - halfDepth, 0, 0));
-    ((AABB &)left->getBoundingVolume()).setHalfSizes(vector(halfDepth, height * 0.5, halfDepth));
+    left->setOrigin(vector(width * -0.51 - halfDepth, 0, 0));
+    left->setHalfSizes(vector(halfDepth, height * 0.5, halfDepth));
 
-    right->setPosition(vector(width * 0.51 + + halfDepth, 0, 0));
-    ((AABB &)right->getBoundingVolume()).setHalfSizes(vector(halfDepth, height *  0.5, halfDepth));
+    right->setOrigin(vector(width * 0.51 + + halfDepth, 0, 0));
+    right->setHalfSizes(vector(halfDepth, height *  0.5, halfDepth));
 
     paddle->setPosition(vector(
         paddle->getPosition().x,
@@ -174,10 +172,10 @@ public:
       }
     }
 
-    geometryRenderer.render(top->getBoundingVolume());
-    geometryRenderer.render(bottom->getBoundingVolume());
-    geometryRenderer.render(left->getBoundingVolume());
-    geometryRenderer.render(right->getBoundingVolume());
+    geometryRenderer.render(*top);
+    geometryRenderer.render(*bottom);
+    geometryRenderer.render(*left);
+    geometryRenderer.render(*right);
 
     return LoopResult::CONTINUE;
   }
