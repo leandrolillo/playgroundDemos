@@ -45,7 +45,7 @@ public:
 
 class MinkowskiDifferenceRunner: public BaseDemoRunner {
   CollisionTester intersectionTester;
-  GeometryRenderer geometryRenderer;
+  GeometryRenderer geometryRenderer { defaultRenderer };
 
   SelectableGeometry left {std::make_unique<AABB>(vector(0, 0, 0), vector(40, 40, 50))};
   SelectableGeometry right {std::make_unique<AABB>(vector(0, 0, 0), vector(40, 80, 50))};
@@ -65,8 +65,8 @@ class MinkowskiDifferenceRunner: public BaseDemoRunner {
   vector2 startPosition;
 
 public:
-  MinkowskiDifferenceRunner() : geometryRenderer(defaultRenderer) {
-  }
+
+  using BaseDemoRunner::BaseDemoRunner; //inherit constructors
 
   bool initialize() override {
     if (!BaseDemoRunner::initialize()) {
@@ -235,14 +235,13 @@ public:
 
 class MinkowskiDifference: public Playground {
 public:
-  MinkowskiDifference(const String &resourcesBasePath) :
-      Playground(resourcesBasePath) {
-  }
+  using Playground::Playground;
+
   void initializePlayground() override {
     Playground::initializePlayground();
-    this->addRunner(std::make_unique<OpenGLRunner>());
-    this->addRunner(std::make_unique<AudioRunner>());
-    this->addRunner(std::make_unique<MinkowskiDifferenceRunner>());
+    this->addRunner<OpenGLRunner>();
+    this->addRunner<AudioRunner>();
+    this->addRunner<MinkowskiDifferenceRunner>();
   }
 };
 
@@ -250,7 +249,7 @@ int main(int argc, char **argv) {
   String repository = Paths::add(Paths::getDirname(argv[0]), "resources"); //assumes executable lies in playground/target folder
   MinkowskiDifference playground(repository);
   playground.withName("MinkowskiDifference");
-  printf("\n\nRunning playground [%s]\n", playground.toString().c_str());
+  printf("\n\nRunning [%s]\n", playground.toString().c_str());
   playground.run();
   printf("done\n");
   return 0;

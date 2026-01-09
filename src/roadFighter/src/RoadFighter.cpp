@@ -22,6 +22,8 @@ class RoadFighterRunner: public BaseDemoRunner {
   Source *backgroundMusic = null;
 
 public:
+  using BaseDemoRunner::BaseDemoRunner; //inherit constructors
+
   bool initialize() override {
     if (!BaseDemoRunner::initialize()) {
       return false;
@@ -149,14 +151,13 @@ public:
 
 class RoadFighter: public Playground {
 public:
-  RoadFighter(const String &resourcesBasePath) :
-      Playground(resourcesBasePath) {
-  }
+  using Playground::Playground;
+
   void initializePlayground() override {
     Playground::initializePlayground();
-    this->addRunner(std::make_unique<OpenGLRunner>());
-    this->addRunner(std::make_unique<AudioRunner>());
-    this->addRunner(std::make_unique<RoadFighterRunner>());
+    this->addRunner<OpenGLRunner>();
+    this->addRunner<AudioRunner>();
+    this->addRunner<RoadFighterRunner>();
   }
 };
 
@@ -164,7 +165,7 @@ int main(int argc, char **argv) {
   String repository = Paths::add(Paths::getDirname(argv[0]), "resources");
   RoadFighter playground(repository);
   playground.withName("Road Fighter");
-  printf("\n\nRunning playground [%s]\n", playground.toString().c_str());
+  printf("\n\nRunning [%s]\n", playground.toString().c_str());
   playground.run();
   printf("done\n");
   return 0;

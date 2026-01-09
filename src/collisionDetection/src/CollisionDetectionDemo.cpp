@@ -51,11 +51,10 @@ class CollisionDetectionDemoRunner: public BaseDemoRunner {
 
     SkyboxRenderer skyboxRenderer;
     GridRenderer gridRenderer;
-    ParticleManagerRenderer particleManagerRenderer;
+    ParticleManagerRenderer particleManagerRenderer { defaultRenderer };
 
 public:
-    CollisionDetectionDemoRunner() :  particleManagerRenderer(defaultRenderer) {
-    }
+    using BaseDemoRunner::BaseDemoRunner; //inherit constructors
 
 //    virtual void onResize(unsigned int height, unsigned int width) override {
 //      camera.setProjectionMatrix(Camera::orthographicProjection(5.0, (double) width / (double) height, -20.0, 100.0));
@@ -294,21 +293,21 @@ public:
 
 class CollisionDetectionPlayground: public Playground {
 public:
-    CollisionDetectionPlayground(const String &resourcesBasePath) : Playground(resourcesBasePath) {
-    }
-    void initializePlayground() override {
-        Playground::initializePlayground();
-        this->addRunner(std::make_unique<OpenGLRunner>());
-        this->addRunner(std::make_unique<AudioRunner>());
-        this->addRunner(std::make_unique<CollisionDetectionDemoRunner>());
-    }
+  using Playground::Playground; //inherit constructors
+
+  void initializePlayground() override {
+      Playground::initializePlayground();
+      this->addRunner<OpenGLRunner>();
+      this->addRunner<AudioRunner>();
+      this->addRunner<CollisionDetectionDemoRunner>();
+  }
 };
 
 int main(int argc, char** argv){
   String repository = Paths::add(Paths::getDirname(argv[0]), "resources"); //assumes executable lies in playground/target folder
   CollisionDetectionPlayground playground(repository);
   playground.withName("Collision detection demo");
-  printf("\n\nRunning playground [%s]\n", playground.toString().c_str());
+  printf("\n\nRunning [%s]\n", playground.toString().c_str());
   playground.run();
     printf("done\n");
     return 0;

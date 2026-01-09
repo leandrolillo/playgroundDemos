@@ -14,8 +14,8 @@
 #include "../../base/BaseDemo.h"
 
 class ObjDemoRunner: public BaseDemoRunner {
-  LightResource light;
-  MaterialResource material;
+  LightResource light {vector(0.0f, 0.0f, 1.0f), vector(0.3f, 0.3f, 0.3f), vector(0.5f, 0.5f, 0.5f), vector(1.0f, 1.0f, 1.0f), 1.0f};
+  MaterialResource material {vector(0.2f, 0.2f, 0.2f), vector(0.5f, 0.5f, 0.5f), vector(0.5f, 0.5f, 0.5f), 32.0f};
 
   GridRenderer gridRenderer;
 
@@ -27,10 +27,7 @@ class ObjDemoRunner: public BaseDemoRunner {
   vector posicion;
 
 public:
-  ObjDemoRunner() : material(vector(0.2f, 0.2f, 0.2f), vector(0.5f, 0.5f, 0.5f), vector(0.5f, 0.5f, 0.5f), 32.0f),
-      light(vector(0.0f, 0.0f, 1.0f), vector(0.3f, 0.3f, 0.3f), vector(0.5f, 0.5f, 0.5f), vector(1.0f, 1.0f, 1.0f), 1.0f) {
-    reset();
-  }
+  using BaseDemoRunner::BaseDemoRunner; //inherit constructors
 
   void reset() {
     posicion = vector(0, 0, -5);
@@ -44,15 +41,15 @@ public:
     gridRenderer.setVideoRunner(*video);
     defaultRenderer.setLight(&light);
 
-//	    texture = (TextureResource *)this->getContainer()->getResourceManager().load("images/fern.png", MimeTypes::TEXTURE);
-//        obj = (VertexArrayResource *)this->getContainer()->getResourceManager().load("geometry/fern.obj", MimeTypes::VERTEXARRAY);
-    texture = (TextureResource*) this->getContainer()->getResourceManager().load("images/lowPolyTree.png", MimeTypes::TEXTURE);
-    obj = (VertexArrayResource*) this->getContainer()->getResourceManager().load("geometry/lowPolyTree.obj/lowPolyTree.obj",
+//	    texture = (TextureResource *)this->getContainer().getResourceManager().load("images/fern.png", MimeTypes::TEXTURE);
+//        obj = (VertexArrayResource *)this->getContainer().getResourceManager().load("geometry/fern.obj", MimeTypes::VERTEXARRAY);
+    texture = (TextureResource*) this->getContainer().getResourceManager().load("images/lowPolyTree.png", MimeTypes::TEXTURE);
+    obj = (VertexArrayResource*) this->getContainer().getResourceManager().load("geometry/lowPolyTree.obj/lowPolyTree.obj",
         MimeTypes::VERTEXARRAY);
 
-//	    texture = (TextureResource *)this->getContainer()->getResourceManager().load("images/lowPolyTree.png", MimeTypes::TEXTURE);
-    //obj = (VertexArrayResource *)this->getContainer()->getResourceManager().load("geometry/bunny.obj", MimeTypes::VERTEXARRAY);
-//        obj = (VertexArrayResource *)this->getContainer()->getResourceManager().load("geometry/untitled.obj", MimeTypes::VERTEXARRAY);
+//	    texture = (TextureResource *)this->getContainer().getResourceManager().load("images/lowPolyTree.png", MimeTypes::TEXTURE);
+    //obj = (VertexArrayResource *)this->getContainer().getResourceManager().load("geometry/bunny.obj", MimeTypes::VERTEXARRAY);
+//        obj = (VertexArrayResource *)this->getContainer().getResourceManager().load("geometry/untitled.obj", MimeTypes::VERTEXARRAY);
 
     reset();
 
@@ -115,9 +112,9 @@ public:
   }
   void initializePlayground() override {
     Playground::initializePlayground();
-    this->addRunner(std::make_unique<OpenGLRunner>());
-    this->addRunner(std::make_unique<AudioRunner>());
-    this->addRunner(std::make_unique<ObjDemoRunner>());
+    this->addRunner<OpenGLRunner>();
+    this->addRunner<AudioRunner>();
+    this->addRunner<ObjDemoRunner>();
   }
 };
 
@@ -125,7 +122,7 @@ int main(int argc, char **argv) {
   String repository = Paths::add(Paths::getDirname(argv[0]), "resources"); //assumes executable lies in playground/target folder
   ObjDemoPlayground playground(repository);
   playground.withName("ObjDemoPlayground");
-  printf("\n\nRunning playground [%s]\n", playground.toString().c_str());
+  printf("\n\nRunning [%s]\n", playground.toString().c_str());
   playground.run();
   printf("done\n");
   return 0;

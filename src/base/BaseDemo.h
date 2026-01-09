@@ -27,7 +27,7 @@ protected:
 
   Camera camera;
   public:
-  BaseDemoRunner() {
+  BaseDemoRunner(Playground &container) : PlaygroundRunner(container) {
     logger->addAppender(LoggerFactory::getAppender("stdout"));
   }
 
@@ -44,8 +44,8 @@ protected:
   }
 
   virtual bool initialize() override {
-    video = (VideoRunner*) this->getContainer()->getRequiredRunner(VideoRunner::ID);
-    audio = (AudioRunner*) this->getContainer()->getRequiredRunner(AudioRunner::ID);
+    video = (VideoRunner*) this->getContainer().getRequiredRunner(VideoRunner::ID);
+    audio = (AudioRunner*) this->getContainer().getRequiredRunner(AudioRunner::ID);
 
     this->video->resize(800, 600);
 

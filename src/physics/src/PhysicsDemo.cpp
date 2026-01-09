@@ -61,7 +61,7 @@ class PhysicsDemoRunner: public BaseDemoRunner {
   /**
    * Renderers - defaultRenderer inherited from base demo
    */
-  GeometryRenderer geometryRenderer;
+  GeometryRenderer geometryRenderer { defaultRenderer };
   SkyboxRenderer skyboxRenderer;
   GridRenderer gridRenderer;
 
@@ -89,19 +89,19 @@ class PhysicsDemoRunner: public BaseDemoRunner {
   vector breakoutPosition {0, 4, 0};
 
   public:
-  PhysicsDemoRunner() : geometryRenderer(defaultRenderer) {
-  }
+
+  using BaseDemoRunner::BaseDemoRunner; //inherit constructors
 
   bool initialize() override {
     BaseDemoRunner::initialize();
 
-    physics = (PhysicsRunner*) this->getContainer()->getRequiredRunner(PhysicsRunner::ID);
+    physics = (PhysicsRunner*) this->getContainer().getRequiredRunner(PhysicsRunner::ID);
     //physics->setPlaybackSpeed(0.3);
 
     gunshotSource = audio->createSource("audio/handgunfire.wav", vector(0, 0, 0), vector(0, 0, 0), false);
     bounceSource = audio->createSource("audio/twang3.wav", vector(0, 0, 0), vector(0, 0, 0), false);
 
-    textureResource = (TextureResource*) this->getContainer()->getResourceManager().load("images/basketball.png", MimeTypes::TEXTURE);
+    textureResource = (TextureResource*) this->getContainer().getResourceManager().load("images/basketball.png", MimeTypes::TEXTURE);
     basketball = (MeshResource*) this->getResourceManager().load("geometry/basketball.json/basketball", MimeTypes::MESH);
 
     gridRenderer.setVideoRunner(*video);
@@ -318,15 +318,14 @@ class PhysicsDemoRunner: public BaseDemoRunner {
 
 class PhysicsPlayground: public Playground {
 public:
-  PhysicsPlayground(const String &resourcesBasePath) :
-      Playground(resourcesBasePath) {
-  }
+  using Playground::Playground; //inherit constructors
+
   void initializePlayground() override {
     Playground::initializePlayground();
-    this->addRunner(std::make_unique<OpenGLRunner>());
-    this->addRunner(std::make_unique<AudioRunner>());
-    this->addRunner(std::make_unique<PhysicsRunner>());
-    this->addRunner(std::make_unique<PhysicsDemoRunner>());
+    this->addRunner<OpenGLRunner>();
+    this->addRunner<AudioRunner>();
+    this->addRunner<PhysicsRunner>();
+    this->addRunner<PhysicsDemoRunner>();
   }
 };
 
@@ -351,7 +350,7 @@ int main(int argc, char **argv) {
   String repository = Paths::add(Paths::getDirname(argv[0]), "resources"); //assumes executable lies in playground/target folder
   PhysicsPlayground playground(repository);
   playground.withName("PhysicsDemo");
-  printf("\n\nRunning playground [%s]\n", playground.toString().c_str());
+  printf("\n\nRunning [%s]\n", playground.toString().c_str());
   playground.run();
   printf("done\n");
   return 0;

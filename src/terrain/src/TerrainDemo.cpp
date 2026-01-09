@@ -24,9 +24,7 @@ protected:
   TerrainResource *terrain = null;
 
 public:
-  TerrainFPSInputController(Camera &cameraReference, matriz &playerTransformReference) : FPSInputController(cameraReference,
-      playerTransformReference) {
-  }
+  using FPSInputController::FPSInputController;
 
   void setTerrain(TerrainResource *terrain) {
     this->terrain = terrain;
@@ -54,9 +52,7 @@ protected:
   TerrainResource *terrain = null;
 
 public:
-  TerrainThirdPersonInputController(Camera &cameraReference, matriz &playerTransformReference) : ThirdPersonInputController(cameraReference,
-      playerTransformReference) {
-  }
+  using ThirdPersonInputController::ThirdPersonInputController;
 
   void setTerrain(TerrainResource *terrain) {
     this->terrain = terrain;
@@ -94,8 +90,8 @@ private:
    * Input controllers
    */
 
-  TerrainFPSInputController fpsInputController;
-  TerrainThirdPersonInputController thirdPersonController;
+  TerrainFPSInputController fpsInputController {camera, playerTransform};
+  TerrainThirdPersonInputController thirdPersonController {camera, playerTransform};
   InputController *inputController = &fpsInputController;
 
   matriz playerTransform;
@@ -104,11 +100,11 @@ private:
    * This demo stuff
    */
 
-  LightResource light;
+  LightResource light {vector(0, 0, 0), vector(0.2f, 0.2f, 0.2f), vector(0.2f, 0.2f, 0.2f), vector(0.1f, 0.1f, 0.1f), 1.0f};
 
   TerrainRenderer terrainRenderer;
   SkyboxRenderer skyboxRenderer;
-  ParticleManagerRenderer particleManagerRenderer;
+  ParticleManagerRenderer particleManagerRenderer {defaultRenderer};
 
 
   VertexArrayResource *tree = null;
@@ -126,13 +122,7 @@ private:
   MaterialResource *materials[3] = { &red, &green, &blue };
 
 public:
-  TerrainDemoRunner() : light(vector(0, 0, 0),
-      vector(0.2f, 0.2f, 0.2f), vector(0.2f, 0.2f, 0.2f),
-      vector(0.1f, 0.1f, 0.1f), 1.0f),
-      fpsInputController(camera, playerTransform),
-      thirdPersonController(camera, playerTransform),
-      particleManagerRenderer(defaultRenderer){
-  }
+  using BaseDemoRunner::BaseDemoRunner; //inherit constructors
 
   virtual void onResize(unsigned int height, unsigned int width) override {
     /**
@@ -146,7 +136,7 @@ public:
       return false;
     }
 
-    physics = (PhysicsRunner*) this->getContainer()->getRequiredRunner(PhysicsRunner::ID);
+    physics = (PhysicsRunner*) this->getContainer().getRequiredRunner(PhysicsRunner::ID);
     physics->getParticleManager().addForce(std::make_unique<Gravity>(vector(0.0, -9.8, 0.0)));
 
     video->enable(RELATIVE_MOUSE_MODE, 0);
@@ -371,15 +361,14 @@ public:
 
 class PlaygroundTerrainDemo: public Playground {
 public:
-  PlaygroundTerrainDemo(const String &resourcesBasePath) :
-      Playground(resourcesBasePath) {
-  }
+  using Playground::Playground;
+
   void initializePlayground() override {
     Playground::initializePlayground();
-    this->addRunner(std::make_unique<OpenGLRunner>());
-    this->addRunner(std::make_unique<AudioRunner>());
-    this->addRunner(std::make_unique<PhysicsRunner>());
-    this->addRunner(std::make_unique<TerrainDemoRunner>());
+    this->addRunner<OpenGLRunner>();
+    this->addRunner<AudioRunner>();
+    this->addRunner<PhysicsRunner>();
+    this->addRunner<TerrainDemoRunner>();
   }
 };
 
@@ -388,7 +377,7 @@ int main(int argc, char **argv) {
 
   PlaygroundTerrainDemo playground(repository);
   playground.withName("Terrain Demo");
-  printf("\n\nRunning playground [%s]\n", playground.toString().c_str());
+  printf("\n\nRunning [%s]\n", playground.toString().c_str());
   playground.run();
   printf("done\n");
   return 0;

@@ -21,11 +21,12 @@ constexpr real PADDLE_HEIGHT = 10;
 
 class BreakoutRunner: public BaseDemoRunner {
   PhysicsRunner *physics = null;
-  LightResource light;
+  LightResource light{ vector(0, 0, 0), vector(1, 1, 1), vector(1, 1, 1), vector(1, 1, 1), 1.0f };
 
   MeshResource *basketball = null;
 
   Background background;
+  //Border border;
   Particle *ball = null;
   Particle *paddle = null;
 
@@ -40,9 +41,8 @@ class BreakoutRunner: public BaseDemoRunner {
   AABB *left = null;
   AABB *right = null;
 public:
-  BreakoutRunner() :  background(0, 0),
-                      geometryRenderer(defaultRenderer),
-                      light(vector(0, 0, 0), vector(1, 1, 1), vector(1, 1, 1), vector(1, 1, 1), 1.0f) {
+  BreakoutRunner(Playground &container) : BaseDemoRunner(container),
+                                          geometryRenderer(defaultRenderer) {
   }
 
   bool initialize() override {
@@ -59,7 +59,7 @@ public:
 
     basketball = (MeshResource*) this->getResourceManager().load("geometry/basketball.json/basketball", MimeTypes::MESH);
 
-    physics = (PhysicsRunner*) this->getContainer()->getRequiredRunner(PhysicsRunner::ID);
+    physics = (PhysicsRunner*) this->getContainer().getRequiredRunner(PhysicsRunner::ID);
     ParticleManager &particleManager = physics->getParticleManager();
     particleManager.getCollisionDetector().setRestitution(1.0);
 
@@ -71,11 +71,11 @@ public:
 
     /*Ball*/
     ball = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(vector(0, 0, 0), 10)));
-
-    paddle = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(vector(0, 0, 0), vector(PADDLE_WIDTH, PADDLE_HEIGHT, DEPTH * 0.5))));
     //ball->setMass(1.0);
     ball->setDamping(1.0);
 
+    paddle = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(vector(0, 0, 0), vector(PADDLE_WIDTH, PADDLE_HEIGHT, DEPTH * 0.5))));
+    paddle->setInverseMass(0.0);
 
 
     level = (BreakoutLevel *)getResourceManager().load("level-0.json", BreakoutLevel::MimeType);
@@ -158,7 +158,6 @@ public:
 
     paddle->setPosition(vector(0, paddle->getPosition().y, 0));
     paddle->setVelocity(vector(0, 0, 0));
-    paddle->setInverseMass(0.0);
   }
 
 
@@ -233,15 +232,14 @@ public:
 
 class Breakout: public Playground {
 public:
-  Breakout(const String &resourcesBasePath) :
-      Playground(resourcesBasePath) {
-  }
+  using Playground::Playground; //inherit constructors
+
   void initializePlayground() override {
     Playground::initializePlayground();
-    this->addRunner(std::make_unique<OpenGLRunner>());
-    this->addRunner(std::make_unique<AudioRunner>());
-    this->addRunner(std::make_unique<PhysicsRunner>());
-    this->addRunner(std::make_unique<BreakoutRunner>());
+    this->addRunner<OpenGLRunner>();
+    this->addRunner<AudioRunner>();
+    this->addRunner<PhysicsRunner>();
+    this->addRunner<BreakoutRunner>();
   }
 };
 
@@ -249,7 +247,7 @@ int main(int argc, char **argv) {
   String repository = Paths::add(Paths::getDirname(argv[0]), "resources"); //assumes executable lies in playground/target folder
   Breakout playground(repository);
   playground.withName("Blockout");
-  printf("\n\nRunning playground [%s]\n", playground.toString().c_str());
+  printf("\n\nRunning [%s]\n", playground.toString().c_str());
   playground.run();
   printf("done\n");
   return 0;

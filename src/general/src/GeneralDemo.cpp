@@ -17,7 +17,7 @@ private:
   //Graphical stuff
   vector viewPosition;
   vector lightPosition;
-  vector *currentPosition;
+  vector *currentPosition = &viewPosition;
   real rotation = 0;
 
   Source *lightAnnoyingSoundSource = null;
@@ -32,19 +32,13 @@ private:
   GeometryResource *sphereGeometry = null;
   GeometryResource *triangleGeometry = null;
 
-  MaterialResource material;
-  LightResource light;
+  MaterialResource material {vector(1.0f, 0.5f, 0.31f), vector(1.0f, 0.5f, 0.31f), vector(0.5f, 0.5f, 0.5f), 32.0f};
+  LightResource light {lightPosition, vector(0.2f, 0.2f, 0.2f), vector(0.5f, 0.5f, 0.5f), vector(1.0f, 1.0f, 1.0f), 1.0f};
 
   DefaultRenderer toonRenderer;
   public:
-  GeneralDemoRunner() :
-      material(vector(1.0f, 0.5f, 0.31f), vector(1.0f, 0.5f, 0.31f),
-          vector(0.5f, 0.5f, 0.5f), 32.0f), light(lightPosition,
-          vector(0.2f, 0.2f, 0.2f), vector(0.5f, 0.5f, 0.5f),
-          vector(1.0f, 1.0f, 1.0f), 1.0f) {
 
-    currentPosition = &viewPosition;
-  }
+  using BaseDemoRunner::BaseDemoRunner; //inherit constructors
 
   void reset() {
     viewPosition = vector(0.0, 0.0f, 6.0);
@@ -190,9 +184,9 @@ public:
   }
   void initializePlayground() override {
     Playground::initializePlayground();
-    this->addRunner(std::make_unique<GeneralDemoRunner>());
-    this->addRunner(std::make_unique<OpenGLRunner>());
-    this->addRunner(std::make_unique<AudioRunner>());
+    this->addRunner<GeneralDemoRunner>();
+    this->addRunner<OpenGLRunner>();
+    this->addRunner<AudioRunner>();
 
   }
 };
@@ -201,7 +195,7 @@ int main(int argc, char **argv) {
   String repository = Paths::add(Paths::getDirname(argv[0]), "resources"); //assumes executable lies in playground/target folder
   PlaygroundGeneralDemo playground(repository);
   playground.withName("GeneralDemo");
-  printf("\n\nRunning playground [%s]\n", playground.toString().c_str());
+  printf("\n\nRunning [%s]\n", playground.toString().c_str());
   playground.run();
   printf("done\n");
   return 0;
