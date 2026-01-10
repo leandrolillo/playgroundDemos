@@ -20,26 +20,29 @@ constexpr real PADDLE_WIDTH = 60;
 constexpr real PADDLE_HEIGHT = 10;
 
 class BreakoutRunner: public BaseDemoRunner {
+  GeometryRenderer geometryRenderer { defaultRenderer };
+
   PhysicsRunner *physics = null;
   LightResource light{ vector(0, 0, 0), vector(1, 1, 1), vector(1, 1, 1), vector(1, 1, 1), 1.0f };
 
   MeshResource *basketball = null;
 
-  Background background;
-  //Border border;
+  Background background { resourceManager, defaultRenderer };
+  Border border { ((PhysicsRunner*)this->getContainer().getRequiredRunner(PhysicsRunner::ID))->getParticleManager() ,
+    geometryRenderer,
+    DEPTH};
   Particle *ball = null;
   Particle *paddle = null;
 
   BreakoutLevel *level = null;
   std::vector<AABB *>bricks;
 
-  GeometryRenderer geometryRenderer;
 
-  //Level limits
-  AABB *top = null;
-  AABB *bottom = null;
-  AABB *left = null;
-  AABB *right = null;
+//  //Level limits
+//  AABB *top = null;
+//  AABB *bottom = null;
+//  AABB *left = null;
+//  AABB *right = null;
 public:
   BreakoutRunner(Playground &container) : BaseDemoRunner(container),
                                           geometryRenderer(defaultRenderer) {
@@ -52,10 +55,9 @@ public:
 
     this->getResourceManager().addAdapter(std::make_unique<BreakoutLevelAdapter>());
 
-    TextureResource *backgroundTexture = (TextureResource *)this->getResourceManager().load("background.png", MimeTypes::TEXTURE);
-    if(backgroundTexture != null) {
-      background.setTexture(*backgroundTexture);
-    }
+    background.initialize();
+    border.initialize();
+
 
     basketball = (MeshResource*) this->getResourceManager().load("geometry/basketball.json/basketball", MimeTypes::MESH);
 
@@ -63,11 +65,11 @@ public:
     ParticleManager &particleManager = physics->getParticleManager();
     particleManager.getCollisionDetector().setRestitution(1.0);
 
-    /*Level limits*/
-    top = (AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(2, 1, 0.1)));
-    bottom = (AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(2, 1, 0.1)));
-    left = (AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 2, 0.1)));
-    right = (AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 2, 0.1)));
+//    /*Level limits*/
+//    top = (AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(2, 1, 0.1)));
+//    bottom = (AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(2, 1, 0.1)));
+//    left = (AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 2, 0.1)));
+//    right = (AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 2, 0.1)));
 
     /*Ball*/
     ball = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(vector(0, 0, 0), 10)));
@@ -102,21 +104,10 @@ public:
 
   virtual void onResize(unsigned int height, unsigned int width) override {
     camera.setOrthographicProjection(width, height, zMin, zMax);
+
     background.resize(width, height);
+    border.resize(width, height);
 
-    real halfDepth = DEPTH * 0.5;
-
-    top->setOrigin(vector(0, height * 0.51 + halfDepth, 0));
-    top->setHalfSizes(vector(width * 0.5, halfDepth, halfDepth));
-
-    bottom->setOrigin(vector(0, height * -0.51 - halfDepth, 0));
-    bottom->setHalfSizes(vector(width * 0.5, halfDepth, halfDepth));
-
-    left->setOrigin(vector(width * -0.51 - halfDepth, 0, 0));
-    left->setHalfSizes(vector(halfDepth, height * 0.5, halfDepth));
-
-    right->setOrigin(vector(width * 0.51 + + halfDepth, 0, 0));
-    right->setHalfSizes(vector(halfDepth, height *  0.5, halfDepth));
 
     paddle->setPosition(vector(
         paddle->getPosition().x,
@@ -125,6 +116,7 @@ public:
 
 
     if(level) {
+      real halfDepth = DEPTH * 0.5;
       int margin = 1;
 
       int brick_height = height * 0.75 / level->getRows() - margin;
@@ -163,7 +155,8 @@ public:
 
 
   LoopResult doLoop() override {
-    background.draw(defaultRenderer);
+    background.draw();
+    border.draw();
 
     defaultRenderer.drawObject(matriz_4x4::traslacion(ball->getBoundingVolume().getOrigin()) * matriz_4x4::zoom(0.1, 0.1, 0.1), basketball);
 
@@ -175,11 +168,6 @@ public:
         geometryRenderer.render(*brick);
       }
     }
-
-    geometryRenderer.render(*top);
-    geometryRenderer.render(*bottom);
-    geometryRenderer.render(*left);
-    geometryRenderer.render(*right);
 
     return LoopResult::CONTINUE;
   }
