@@ -9,7 +9,7 @@ public:
     resize(width, height);
   }
 
-  void resize(unsigned int width, unsigned int height) {
+  virtual void resize(unsigned int width, unsigned int height) {
     this->width = width;
     this->height = height;
   }
@@ -66,7 +66,7 @@ public:
     halfDepth(depth * 0.5),
     renderer(renderer) {
   }
-  void resize(unsigned int width, unsigned int height) {
+  void resize(unsigned int width, unsigned int height) override {
     Entity::resize(width, height);
 
     top.setOrigin(vector(0, height * 0.51 + halfDepth, 0));
@@ -87,6 +87,68 @@ public:
     renderer.render(bottom);
     renderer.render(left);
     renderer.render(right);
+  }
+};
+
+class Object : public Entity {
+protected:
+  Particle &particle;
+  GeometryRenderer &renderer;
+public:
+  Object(Particle &particle, GeometryRenderer &renderer) : Entity(0, 0), particle(particle), renderer(renderer) {
+  }
+
+  void setVelocity(const vector &velocity) {
+    this->particle.setVelocity(velocity);
+  }
+
+  void setPosition(const vector &position) {
+      this->particle.setPosition(position);
+  }
+
+  const vector &getPosition() const {
+    return this->particle.getPosition();
+  }
+
+  void draw() override {
+    renderer.render(particle.getBoundingVolume());
+  }
+};
+
+class Paddle : public Object {
+public:
+  Paddle(ParticleManager &particleManager, GeometryRenderer &renderer, real width, real height, real depth) :
+    Object(particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(vector(0, 0, 0), vector(width, height, depth * 0.5)))),
+        renderer) {
+    particle.setInverseMass(0.0);
+  }
+
+  void resize(unsigned int width, unsigned int height) override {
+    Entity::resize(width, height);
+
+    particle.setPosition(vector(
+        particle.getPosition().x,
+        height * -0.5 + 2.0 * ((AABB &)particle.getBoundingVolume()).getHalfSizes().y,
+        particle.getPosition().z));
+  }
+
+  const vector &getHalfSizes() {
+    return ((AABB &)particle.getBoundingVolume()).getHalfSizes();
+  }
+};
+
+class Ball : public Object {
+public:
+
+  Ball(ParticleManager &particleManager, GeometryRenderer &renderer, real radius) :
+    Object(particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(vector(0, 0, 0), radius))),
+        renderer)
+  {
+    particle.setDamping(1.0);
+  }
+
+  real getRadius() {
+    return ((Sphere &)particle.getBoundingVolume()).getRadius();
   }
 };
 

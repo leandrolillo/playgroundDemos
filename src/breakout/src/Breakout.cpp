@@ -21,32 +21,21 @@ constexpr real PADDLE_HEIGHT = 10;
 
 class BreakoutRunner: public BaseDemoRunner {
   GeometryRenderer geometryRenderer { defaultRenderer };
+  PhysicsRunner *physics {(PhysicsRunner*) this->getContainer().getRequiredRunner(PhysicsRunner::ID)};
 
-  PhysicsRunner *physics = null;
   LightResource light{ vector(0, 0, 0), vector(1, 1, 1), vector(1, 1, 1), vector(1, 1, 1), 1.0f };
 
-  MeshResource *basketball = null;
-
   Background background { resourceManager, defaultRenderer };
-  Border border { ((PhysicsRunner*)this->getContainer().getRequiredRunner(PhysicsRunner::ID))->getParticleManager() ,
-    geometryRenderer,
-    DEPTH};
-  Particle *ball = null;
-  Particle *paddle = null;
+  Border border { physics->getParticleManager(), geometryRenderer, DEPTH};
+  Paddle paddle { physics->getParticleManager(), geometryRenderer, PADDLE_WIDTH, PADDLE_HEIGHT, DEPTH};
+  Ball ball { physics->getParticleManager(), geometryRenderer, 10 };
+
 
   BreakoutLevel *level = null;
   std::vector<AABB *>bricks;
 
-
-//  //Level limits
-//  AABB *top = null;
-//  AABB *bottom = null;
-//  AABB *left = null;
-//  AABB *right = null;
 public:
-  BreakoutRunner(Playground &container) : BaseDemoRunner(container),
-                                          geometryRenderer(defaultRenderer) {
-  }
+  using BaseDemoRunner::BaseDemoRunner; //inherit constructors
 
   bool initialize() override {
     if (!BaseDemoRunner::initialize()) {
@@ -57,28 +46,12 @@ public:
 
     background.initialize();
     border.initialize();
+    paddle.initialize();
+    ball.initialize();
 
 
-    basketball = (MeshResource*) this->getResourceManager().load("geometry/basketball.json/basketball", MimeTypes::MESH);
-
-    physics = (PhysicsRunner*) this->getContainer().getRequiredRunner(PhysicsRunner::ID);
     ParticleManager &particleManager = physics->getParticleManager();
     particleManager.getCollisionDetector().setRestitution(1.0);
-
-//    /*Level limits*/
-//    top = (AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(2, 1, 0.1)));
-//    bottom = (AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(2, 1, 0.1)));
-//    left = (AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 2, 0.1)));
-//    right = (AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 2, 0.1)));
-
-    /*Ball*/
-    ball = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(vector(0, 0, 0), 10)));
-    //ball->setMass(1.0);
-    ball->setDamping(1.0);
-
-    paddle = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(vector(0, 0, 0), vector(PADDLE_WIDTH, PADDLE_HEIGHT, DEPTH * 0.5))));
-    paddle->setInverseMass(0.0);
-
 
     level = (BreakoutLevel *)getResourceManager().load("level-0.json", BreakoutLevel::MimeType);
 
@@ -107,12 +80,8 @@ public:
 
     background.resize(width, height);
     border.resize(width, height);
-
-
-    paddle->setPosition(vector(
-        paddle->getPosition().x,
-        height * -0.5 + 2.0 * ((AABB &)paddle->getBoundingVolume()).getHalfSizes().y,
-        paddle->getPosition().z));
+//    ball.resize(width, height);
+    paddle.resize(width, height);
 
 
     if(level) {
@@ -144,12 +113,12 @@ public:
     real speed = BALL_VELOCITY + speedDistribution(mtRNE);
 
     //logger->info("Ball random values - angle [%.2f], module [%.2f]", angulo, modulo);
-    real ballY = paddle->getPosition().y + ((AABB &)paddle->getBoundingVolume()).getHalfSizes().y + ((Sphere &)ball->getBoundingVolume()).getRadius();
-    ball->setPosition(vector(0, ballY, 0));
-    ball->setVelocity(vector(speed * cos(radian(direction)), speed * sin(radian(direction)), 0));
+    real ballY = paddle.getPosition().y + paddle.getHalfSizes().y + ball.getRadius();
+    ball.setPosition(vector(0, ballY, 0));
+    ball.setVelocity(vector(speed * cos(radian(direction)), speed * sin(radian(direction)), 0));
 
-    paddle->setPosition(vector(0, paddle->getPosition().y, 0));
-    paddle->setVelocity(vector(0, 0, 0));
+    paddle.setPosition(vector(0, paddle.getPosition().y, 0));
+    paddle.setVelocity(vector(0, 0, 0));
   }
 
 
@@ -157,11 +126,8 @@ public:
   LoopResult doLoop() override {
     background.draw();
     border.draw();
-
-    defaultRenderer.drawObject(matriz_4x4::traslacion(ball->getBoundingVolume().getOrigin()) * matriz_4x4::zoom(0.1, 0.1, 0.1), basketball);
-
-    geometryRenderer.render(ball->getBoundingVolume());
-    geometryRenderer.render(paddle->getBoundingVolume());
+    ball.draw();
+    paddle.draw();
 
     for(auto &brick : bricks) {
       if(brick->getStatus()) {
@@ -191,7 +157,7 @@ public:
       case SDLK_A:
       case SDLK_RIGHT:
       case SDLK_D:
-        paddle->setVelocity(vector(0, 0, 0));
+        paddle.setVelocity(vector(0, 0, 0));
         break;
     }
   }
@@ -200,11 +166,11 @@ public:
     switch (key) {
       case SDLK_LEFT:
       case SDLK_A:
-        paddle->setVelocity(vector(-PADDLE_VELOCITY, 0, 0));
+        paddle.setVelocity(vector(-PADDLE_VELOCITY, 0, 0));
         break;
       case SDLK_RIGHT:
       case SDLK_D:
-        paddle->setVelocity(vector(PADDLE_VELOCITY, 0, 0));
+        paddle.setVelocity(vector(PADDLE_VELOCITY, 0, 0));
         break;
 
       case SDLK_SPACE:
