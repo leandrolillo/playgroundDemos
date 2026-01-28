@@ -25,14 +25,11 @@ class BreakoutRunner: public BaseDemoRunner {
 
   LightResource light{ vector(0, 0, 0), vector(1, 1, 1), vector(1, 1, 1), vector(1, 1, 1), 1.0f };
 
-  Background background { resourceManager, defaultRenderer };
+  Background background { resourceManager, defaultRenderer};
   Border border { physics->getParticleManager(), geometryRenderer, DEPTH};
   Paddle paddle { physics->getParticleManager(), geometryRenderer, PADDLE_WIDTH, PADDLE_HEIGHT, DEPTH};
   Ball ball { physics->getParticleManager(), geometryRenderer, 10 };
-
-
-  BreakoutLevel *level = null;
-  std::vector<AABB *>bricks;
+  Level level { resourceManager, physics->getParticleManager(), geometryRenderer, DEPTH};
 
 public:
   using BaseDemoRunner::BaseDemoRunner; //inherit constructors
@@ -44,31 +41,14 @@ public:
 
     this->getResourceManager().addAdapter(std::make_unique<BreakoutLevelAdapter>());
 
+    ParticleManager &particleManager = physics->getParticleManager();
+    particleManager.getCollisionDetector().setRestitution(1.0);
+
     background.initialize();
     border.initialize();
     paddle.initialize();
     ball.initialize();
-
-
-    ParticleManager &particleManager = physics->getParticleManager();
-    particleManager.getCollisionDetector().setRestitution(1.0);
-
-    level = (BreakoutLevel *)getResourceManager().load("level-0.json", BreakoutLevel::MimeType);
-
-    if(level) {
-      for(unsigned int i = 0; i < level->getRows(); i++) {
-        for(unsigned int j = 0; j < level->getColumns(); j++) {
-          this->bricks.push_back((AABB *)&particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 1, 1))));
-          this->bricks.back()->setOnCollisionHandler([brick=bricks.back()](GeometryContact &contact) { brick->setStatus(false); });
-
-          if(level->getBrickAt(i, j) == 0) {
-            this->bricks.back()->setStatus(false);
-          }
-        }
-      }
-    }
-
-
+    level.initialize();
 
     reset();
 
@@ -82,25 +62,7 @@ public:
     border.resize(width, height);
 //    ball.resize(width, height);
     paddle.resize(width, height);
-
-
-    if(level) {
-      real halfDepth = DEPTH * 0.5;
-      int margin = 1;
-
-      int brick_height = height * 0.75 / level->getRows() - margin;
-      int brick_width = width / level->getColumns() - margin;
-
-      int left = -((int)width >> 1) + (width - (brick_width + margin) * level->getColumns()) / 2; //centered
-      int top = ((int)height >> 1) - brick_height + margin;
-
-      for(unsigned int i = 0; i < level->getRows(); i++) {
-        for(unsigned int j = 0; j < level->getColumns(); j++) {
-          this->bricks[i * level->getColumns() + j]->setHalfSizes(vector((int)brick_width >> 1, (int)brick_height >> 1, halfDepth));
-          this->bricks[i * level->getColumns() + j]->setPosition(vector(left + (int)j * (margin + (int)brick_width), top - (int)i * (margin + (int)brick_height), -halfDepth));
-        }
-      }
-    }
+    level.resize(width, height);
   }
 
   std::uniform_real_distribution<real> directionDistribution {10, 170};
@@ -128,12 +90,8 @@ public:
     border.draw();
     ball.draw();
     paddle.draw();
+    level.draw();
 
-    for(auto &brick : bricks) {
-      if(brick->getStatus()) {
-        geometryRenderer.render(*brick);
-      }
-    }
 
     return LoopResult::CONTINUE;
   }

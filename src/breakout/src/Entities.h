@@ -1,4 +1,5 @@
 #include "DefaultRenderer.h"
+#include "BreakoutLevel.h"
 
 class Entity {
 protected:
@@ -152,9 +153,142 @@ public:
   }
 };
 
+class Brick: public Entity {
+  unsigned int i;
+  unsigned int j;
+  unsigned int hitsLeft;
+  AABB &boundingBox;
+public:
+  Brick(const Brick &brick) = delete;
+  Brick(Brick &&brick) = default;
+
+  Brick(unsigned int i, unsigned int j, unsigned int hitsLeft, AABB &boundingBox) :
+    Entity(2, 2),
+    boundingBox(boundingBox),
+    hitsLeft(hitsLeft) {
+
+    this->i = i;
+    this->j = j;
+    boundingBox.setOnCollisionHandler([this](GeometryContact &contact) {
+      this->onCollision();
+//      this->hitsLeft--;
+//      if(contact.getGeometryA()) {
+//        contact.getGeometryA()->setStatus(this->hitsLeft <= 0);
+//      }
+      //this->boundingBox.setStatus(this->hitsLeft <= 0);
+      //this->boundingBox.setStatus(false);
+    });
+  }
+
+  void onCollision() {
+    this->hitsLeft--;
+    this->setStatus(this->hitsLeft <= 0);
+  }
+
+  unsigned int getI() {
+    return this->i;
+  }
+
+  unsigned int getJ() {
+    return this->j;
+  }
+
+  void setPosition(const vector &position) {
+    this->boundingBox.setPosition(position);
+  }
+
+  void setHalfSizes(const vector &halfSizes) {
+    this->boundingBox.setHalfSizes(halfSizes);
+  }
+
+  AABB &getBoundingBox() const {
+    return this->boundingBox;
+  }
+
+  bool getStatus() const {
+    return this->boundingBox.getStatus();
+  }
+
+  void setStatus(bool status) {
+    this->boundingBox.setStatus(status);
+  }
+};
+
 class Level: public Entity {
+  unsigned int rows = 0;
+  unsigned int columns = 0;
+  real halfDepth;
+
+  ResourceManager &resourceManager;
+  ParticleManager &particleManager;
+  GeometryRenderer &renderer;
+
+  std::vector<std::unique_ptr<Brick>>bricks;
+
+public:
+  Level(ResourceManager &resourceManager, ParticleManager &particleManager, GeometryRenderer &renderer, real depth) :
+    Entity(0, 0),
+    resourceManager(resourceManager),
+    particleManager(particleManager),
+    renderer(renderer),
+    halfDepth(depth * 0.5)
+  {
+
+
+  }
+
+  void resize(unsigned int width, unsigned int height) override {
+    Entity::resize(width, height);
+    int margin = 1;
+
+    int brick_height = height * 0.75 / rows - margin;
+    int brick_width = width / columns - margin;
+
+    int left = -((int)width >> 1) + (width - (brick_width + margin) * columns) / 2; //centered
+    int top = ((int)height >> 1) - brick_height + margin;
+
+
+    for(auto &brick : bricks) {
+      brick->setHalfSizes(vector((int)brick_width >> 1, (int)brick_height >> 1, halfDepth));
+      brick->setPosition(vector(left + (int)brick->getJ() * (margin + (int)brick_width), top - (int)brick->getI() * (margin + (int)brick_height), -halfDepth));
+    }
+
+//    for(unsigned int i = 0; i < level->getRows(); i++) {
+//      for(unsigned int j = 0; j < level->getColumns(); j++) {
+//        this->bricks[i * level->getColumns() + j]->setHalfSizes(vector((int)brick_width >> 1, (int)brick_height >> 1, halfDepth));
+//        this->bricks[i * level->getColumns() + j]->setPosition(vector(left + (int)j * (margin + (int)brick_width), top - (int)i * (margin + (int)brick_height), -halfDepth));
+//      }
+//    }
+  }
+
+  void initialize() override {
+    for(auto &brick : bricks) {
+      particleManager.removeScenery(brick->getBoundingBox());
+    }
+    this->bricks.clear();
+
+    BreakoutLevel *levelDescription = (BreakoutLevel *)resourceManager.load("level-0.json", BreakoutLevel::MimeType);
+    if(levelDescription) {
+      this->rows = levelDescription->getRows();
+      this->columns = levelDescription->getColumns();
+
+      for(unsigned int i = 0; i < levelDescription->getRows(); i++) {
+        for(unsigned int j = 0; j < levelDescription->getColumns(); j++) {
+          if(levelDescription->getBrickAt(i, j) != 0) {
+            this->bricks.push_back(std::make_unique<Brick>(i, j, levelDescription->getBrickAt(i, j), (AABB &)particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 1, 1)))));
+          }
+        }
+      }
+    }
+  }
+
+  void draw() override {
+    for(auto &brick : bricks) {
+      if(brick->getStatus()) {
+        renderer.render(brick->getBoundingBox());
+      }
+    }
+  }
 
 };
-class Brick: public Entity {
-  unsigned int hitsLeft;
-};
+

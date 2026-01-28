@@ -101,7 +101,7 @@ class PhysicsDemoRunner: public BaseDemoRunner {
     gunshotSource = audio->createSource("audio/handgunfire.wav", vector(0, 0, 0), vector(0, 0, 0), false);
     bounceSource = audio->createSource("audio/twang3.wav", vector(0, 0, 0), vector(0, 0, 0), false);
 
-    textureResource = (TextureResource*) this->getContainer().getResourceManager().load("images/basketball.png", MimeTypes::TEXTURE);
+    textureResource = (TextureResource*) this->getResourceManager().load("images/basketball.png", MimeTypes::TEXTURE);
     basketball = (MeshResource*) this->getResourceManager().load("geometry/basketball.json/basketball", MimeTypes::MESH);
 
     gridRenderer.setVideoRunner(*video);
