@@ -6,7 +6,7 @@
 
 class BreakoutLevelAdapter: public ResourceAdapter {
 public:
-  BreakoutLevelAdapter() {
+  BreakoutLevelAdapter(ResourceManager &resourceManager) : ResourceAdapter(resourceManager) {
     logger = LoggerFactory::getLogger("video/BreakoutLevelAdapter");
     this->produces(BreakoutLevel::MimeType);
     this->accepts(MimeTypes::JSON);

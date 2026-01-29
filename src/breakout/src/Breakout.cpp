@@ -39,7 +39,7 @@ public:
       return false;
     }
 
-    this->getResourceManager().addAdapter(std::make_unique<BreakoutLevelAdapter>());
+    this->getResourceManager().addAdapter<BreakoutLevelAdapter>();
 
     ParticleManager &particleManager = physics->getParticleManager();
     particleManager.getCollisionDetector().setRestitution(1.0);
