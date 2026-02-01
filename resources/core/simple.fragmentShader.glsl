@@ -51,7 +51,8 @@ void main()
 	vec3 diffuse = diff * light.diffuse * material.diffuse;
 
 	// specular
-	vec3 viewDir = normalize(viewPosition - vec3(inputData.worldPosition));
+	//vec3 viewDir = normalize(viewPosition - vec3(inputData.worldPosition)); //TODO: review camera position and orientation - it seems to be wrong.
+	vec3 viewDir = normalize(vec3(inputData.worldPosition) - viewPosition);
 	vec3 reflectDir = reflect(lightDir, norm);
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
 	vec3 specular = spec * light.specular * material.specular;

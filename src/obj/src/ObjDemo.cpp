@@ -17,7 +17,7 @@ class ObjDemoRunner: public BaseDemoRunner {
   LightResource light {vector(0.0f, 0.0f, 1.0f), vector(0.3f, 0.3f, 0.3f), vector(0.5f, 0.5f, 0.5f), vector(1.0f, 1.0f, 1.0f), 1.0f};
   MaterialResource material {vector(0.2f, 0.2f, 0.2f), vector(0.5f, 0.5f, 0.5f), vector(0.5f, 0.5f, 0.5f), 32.0f};
 
-  GridRenderer gridRenderer;
+  GridRenderer gridRenderer { video };
 
   VertexArrayResource *obj;
   TextureResource *texture;
@@ -38,7 +38,6 @@ public:
   bool initialize() override {
     BaseDemoRunner::initialize();
 
-    gridRenderer.setVideoRunner(*video);
     defaultRenderer.setLight(&light);
 
 //	    texture = (TextureResource *)this->getContainer().getResourceManager().load("images/fern.png", MimeTypes::TEXTURE);

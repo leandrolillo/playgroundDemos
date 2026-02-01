@@ -102,8 +102,8 @@ private:
 
   LightResource light {vector(0, 0, 0), vector(0.2f, 0.2f, 0.2f), vector(0.2f, 0.2f, 0.2f), vector(0.1f, 0.1f, 0.1f), 1.0f};
 
-  TerrainRenderer terrainRenderer;
-  SkyboxRenderer skyboxRenderer;
+  TerrainRenderer terrainRenderer { video };
+  SkyboxRenderer skyboxRenderer { video };
   ParticleManagerRenderer particleManagerRenderer {defaultRenderer};
 
 
@@ -139,8 +139,8 @@ public:
     physics = (PhysicsRunner*) this->getContainer().getRequiredRunner(PhysicsRunner::ID);
     physics->getParticleManager().addForce(std::make_unique<Gravity>(vector(0.0, -9.8, 0.0)));
 
-    video->enable(RELATIVE_MOUSE_MODE, 0);
-    video->enable(BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    video.enable(VideoAttribute::RELATIVE_MOUSE_MODE, 0);
+    video.enable(VideoAttribute::BLEND, SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
     ResourceManager &resourceManager = this->getResourceManager();
 
     treeTexture = (TextureResource*) resourceManager.load("images/lowPolyTree.png", MimeTypes::TEXTURE);
@@ -162,7 +162,6 @@ public:
     fpsInputController.setTerrain(terrain);
     thirdPersonController.setTerrain(terrain);
 
-    terrainRenderer.setVideoRunner(*video);
     terrainRenderer.setLight(&light);
     terrainRenderer.addTerrain(vector(0, 0, 0), terrain);
     terrainRenderer.addTerrain(vector(-terrain->getHeightMap()->getWidth(), 0, 0), terrain);
@@ -186,7 +185,6 @@ public:
     terrainBoundingVolume->addChildren(std::make_unique<HeightMapGeometry>(vector(0, 0, -terrain->getHeightMap()->getDepth()), *terrain->getHeightMap()));
     terrainBoundingVolume->addChildren(std::make_unique<HeightMapGeometry>(vector(-terrain->getHeightMap()->getWidth(), 0, -terrain->getHeightMap()->getDepth()), *terrain->getHeightMap()));
 
-    skyboxRenderer.setVideoRunner(*video);
     skyboxRenderer.setSize(300);
 
 
@@ -315,7 +313,7 @@ public:
   virtual void onMouseMove(int x, int y, int dx, int dy, unsigned int buttons) override {
     if (dx != 0 || dy != 0) {
       inputController->mouseMove(x, y, dx, dy);
-      this->video->setMousePosition(video->getScreenWidth() >> 1, video->getScreenHeight() >> 1);
+      this->video.setMousePosition(video.getScreenWidth() >> 1, video.getScreenHeight() >> 1);
     }
   }
 

@@ -75,9 +75,9 @@ public:
       return false;
     }
 
-    backgroundMusic = this->audio->createSource("background.ogg",
+    backgroundMusic = this->audio.createSource("background.ogg",
         vector(0, 0, 0), vector(0, 0, 0), true);
-    audio->playSource(backgroundMusic);
+    audio.playSource(backgroundMusic);
 
     return true;
   }

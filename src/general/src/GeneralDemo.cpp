@@ -35,7 +35,7 @@ private:
   MaterialResource material {vector(1.0f, 0.5f, 0.31f), vector(1.0f, 0.5f, 0.31f), vector(0.5f, 0.5f, 0.5f), 32.0f};
   LightResource light {lightPosition, vector(0.2f, 0.2f, 0.2f), vector(0.5f, 0.5f, 0.5f), vector(1.0f, 1.0f, 1.0f), 1.0f};
 
-  DefaultRenderer toonRenderer;
+  DefaultRenderer toonRenderer { video };
   public:
 
   using BaseDemoRunner::BaseDemoRunner; //inherit constructors
@@ -50,8 +50,8 @@ private:
     BaseDemoRunner::initialize();
 
     // demo stuff
-    lightAnnoyingSoundSource = audio->createSource("audio/voltage.wav");
-    audio->playSource(lightAnnoyingSoundSource);
+    lightAnnoyingSoundSource = audio.createSource("audio/voltage.wav");
+    audio.playSource(lightAnnoyingSoundSource);
 
     pngTexture = (TextureResource*) getResourceManager().load("images/TEXTURA.PNG", MimeTypes::TEXTURE);
     pngTexture2 = (TextureResource*) getResourceManager().load("images/CEDFENCE.PNG", MimeTypes::TEXTURE);
@@ -65,13 +65,12 @@ private:
 //        defaultRenderer.setTexture(pngTexture);
 
     toonRenderer.setShaderProgram((ShaderProgramResource*) getResourceManager().load("shaders/toon.330.program.json", MimeTypes::SHADERPROGRAM));
-    toonRenderer.setVideoRunner(*video);
     toonRenderer.setLight(&light);
     toonRenderer.setMaterial(&material);
     toonRenderer.setTexture(pngTexture);
 
-    video->enable(DEPTH_TEST, true);
-    video->enable(CULL_FACE, CULL_FACE_BACK);
+    video.enable(VideoAttribute::DEPTH_TEST, true);
+    video.enable(VideoAttribute::CULL_FACE, CULL_FACE_BACK);
 
     reset();
     return true;
@@ -85,8 +84,8 @@ private:
     if (lightAnnoyingSoundSource != null) {
       lightAnnoyingSoundSource->setPosition(
           vector3(lightPosition.x, lightPosition.y, -lightPosition.z));
-      audio->updateSource(lightAnnoyingSoundSource);
-      audio->updateListener(viewPosition);
+      audio.updateSource(lightAnnoyingSoundSource);
+      audio.updateListener(viewPosition);
     }
 
     /**
@@ -184,10 +183,9 @@ public:
   }
   void initializePlayground() override {
     Playground::initializePlayground();
-    this->addRunner<GeneralDemoRunner>();
     this->addRunner<OpenGLRunner>();
     this->addRunner<AudioRunner>();
-
+    this->addRunner<GeneralDemoRunner>();
   }
 };
 

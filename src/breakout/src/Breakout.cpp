@@ -5,9 +5,10 @@
 
 #include "Entities.h"
 #include "BreakoutLevelAdapter.h"
+#include "SpriteRenderer.h"
 
-constexpr real zMin = -1000;
-constexpr real zMax = 1000;
+constexpr real zMin = -1;
+constexpr real zMax = 1;
 
 static std::mt19937 mtRNE(std::chrono::system_clock::now().time_since_epoch().count()); //random number engine
 
@@ -20,19 +21,30 @@ constexpr real PADDLE_WIDTH = 60;
 constexpr real PADDLE_HEIGHT = 10;
 
 class BreakoutRunner: public BaseDemoRunner {
-  GeometryRenderer geometryRenderer { defaultRenderer };
+  //GeometryRenderer geometryRenderer { defaultRenderer };
+  SpriteRenderer spriteRenderer { video };
+
   PhysicsRunner *physics {(PhysicsRunner*) this->getContainer().getRequiredRunner(PhysicsRunner::ID)};
 
   LightResource light{ vector(0, 0, 0), vector(1, 1, 1), vector(1, 1, 1), vector(1, 1, 1), 1.0f };
 
-  Background background { resourceManager, defaultRenderer};
-  Border border { physics->getParticleManager(), geometryRenderer, DEPTH};
-  Paddle paddle { physics->getParticleManager(), geometryRenderer, PADDLE_WIDTH, PADDLE_HEIGHT, DEPTH};
-  Ball ball { physics->getParticleManager(), geometryRenderer, 10 };
-  Level level { resourceManager, physics->getParticleManager(), geometryRenderer, DEPTH};
+  Background background { resourceManager };
+  Border border { resourceManager, physics->getParticleManager(), DEPTH};
+  Paddle paddle { resourceManager, physics->getParticleManager(), PADDLE_WIDTH, PADDLE_HEIGHT, DEPTH};
+  Ball ball { resourceManager, physics->getParticleManager(), 10 };
+  Level level { resourceManager, physics->getParticleManager(), DEPTH};
 
 public:
   using BaseDemoRunner::BaseDemoRunner; //inherit constructors
+
+  virtual void beforeLoop() override { //use sprite renderer instead
+    spriteRenderer.clear();
+  }
+
+  virtual void afterLoop() override {
+    spriteRenderer.render(camera);
+  }
+
 
   bool initialize() override {
     if (!BaseDemoRunner::initialize()) {
@@ -56,13 +68,14 @@ public:
   }
 
   virtual void onResize(unsigned int height, unsigned int width) override {
+    //camera.setOrthographicProjection(0, height, width, 0, zMin, zMax);
     camera.setOrthographicProjection(width, height, zMin, zMax);
 
-    background.resize(width, height);
-    border.resize(width, height);
+    background.onScreenResize(width, height);
+    border.onScreenResize(width, height);
 //    ball.resize(width, height);
-    paddle.resize(width, height);
-    level.resize(width, height);
+    paddle.onScreenResize(width, height);
+    level.onScreenResize(width, height);
   }
 
   std::uniform_real_distribution<real> directionDistribution {10, 170};
@@ -86,11 +99,11 @@ public:
 
 
   LoopResult doLoop() override {
-    background.draw();
-    border.draw();
-    ball.draw();
-    paddle.draw();
-    level.draw();
+    background.draw(spriteRenderer);
+    border.draw(spriteRenderer);
+    ball.draw(spriteRenderer);
+    paddle.draw(spriteRenderer);
+    level.draw(spriteRenderer);
 
 
     return LoopResult::CONTINUE;

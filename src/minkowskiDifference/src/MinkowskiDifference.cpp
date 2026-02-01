@@ -73,7 +73,7 @@ public:
       return false;
     }
 
-    video->enable(BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    video.enable(VideoAttribute::BLEND, SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
 
     reset();
 
@@ -121,7 +121,7 @@ public:
     if (button == SDL_BUTTON_LEFT) {
       this->startPosition = vector2(x, y);
 
-      vector origin = camera.unproject(x, y, video->getScreenWidth(), video->getScreenHeight());
+      vector origin = camera.unproject(x, y, video.getScreenWidth(), video.getScreenHeight());
       origin.z = -origin.z;
       vector direction = vector(0, 0, -1);
       Line line(origin, direction);
@@ -151,7 +151,7 @@ public:
 
   virtual void onMouseMove(int x, int y, int dx, int dy, unsigned int buttons) override {
     if (dx != 0 || dy != 0) {
-      vector origin = camera.unproject(x, y, video->getScreenWidth(), video->getScreenHeight());
+      vector origin = camera.unproject(x, y, video.getScreenWidth(), video.getScreenHeight());
       origin.z = -origin.z;
       vector direction = vector(0, 0, -1);
       Line line(origin, direction);
