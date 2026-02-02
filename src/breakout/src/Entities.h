@@ -32,6 +32,7 @@ public:
   }
 
   void onScreenResize(unsigned int width, unsigned int height) override {
+    sprite.setPosition(vector2(width * -0.5, height * -0.5));
     sprite.setSize(vector2(width * 0.5, height * 0.5));
   }
 
@@ -41,11 +42,13 @@ public:
 
   void draw(SpriteRenderer &renderer) override {
     renderer.draw(sprite);
-    renderer.draw(*sprite.getTexture(), sprite.getSize(), sprite.getSize(), 0);
+    renderer.draw(*sprite.getTexture(), sprite.getPosition() + sprite.getSize(), sprite.getSize(), 0);
   }
 };
 
 class Border: public Entity {
+  TextureResource *texture = null;
+
   //Level limits
   AABB &top;
   AABB &bottom;
@@ -78,11 +81,15 @@ public:
     right.setHalfSizes(vector(halfDepth, height *  0.5, halfDepth));
   }
 
+  void initialize() override {
+    texture = (TextureResource *)resourceManager.load("background.png", MimeTypes::TEXTURE);
+  }
+
   void draw(SpriteRenderer &renderer) override {
-//    renderer.render(top)
-//    renderer.render(bottom);
-//    renderer.render(left);
-//    renderer.render(right);
+    renderer.draw(*texture, top.getTopLeft().xy(), top.getSize().xy(), 0);
+    renderer.draw(*texture, bottom.getTopLeft().xy(), bottom.getSize().xy(), 0);
+    renderer.draw(*texture, left.getTopLeft().xy(), left.getSize().xy(), 0);
+    renderer.draw(*texture, right.getTopLeft().xy(), right.getSize().xy(), 0);
   }
 };
 
@@ -123,7 +130,7 @@ public:
 
   void onScreenResize(unsigned int width, unsigned int height) override {
     particle.setPosition(vector(
-        width * 0.5,
+        particle.getPosition().x,
         height * -0.5 + 2.0 * ((AABB &)particle.getBoundingVolume()).getHalfSizes().y,
         particle.getPosition().z));
   }
@@ -139,7 +146,7 @@ public:
   void draw(SpriteRenderer &renderer) override {
     AABB &boundingBox = (AABB &)particle.getBoundingVolume();
 
-    renderer.draw(*texture, vector2(boundingBox.getTopLeft().x, boundingBox.getTopLeft().y), vector2(boundingBox.getSize().x, boundingBox.getSize().y), 0);
+    renderer.draw(*texture, boundingBox.getTopLeft().xy(), boundingBox.getSize().xy(), 0);
   }
 };
 
@@ -164,9 +171,8 @@ public:
     Sphere &boundingSphere = (Sphere &)particle.getBoundingVolume();
 
     vector2 halfSizes(boundingSphere.getRadius(), boundingSphere.getRadius());
-    vector2 topLeft = vector2(boundingSphere.getOrigin().x , boundingSphere.getOrigin().y) - halfSizes;
 
-    renderer.draw(*texture, topLeft, halfSizes * 2, 0, vector3(1.0, 1.0, 1.0));
+    renderer.draw(*texture, boundingSphere.getOrigin().xy() - halfSizes, halfSizes * 2, 0, vector3(1.0, 1.0, 1.0));
   }
 };
 
@@ -198,7 +204,7 @@ public:
 
   void onCollision() {
     this->hitsLeft--;
-    this->setStatus(this->hitsLeft != 0);
+    this->setStatus(this->hitsLeft > 0);
   }
 
   unsigned int getI() {
@@ -235,10 +241,12 @@ public:
     }
 
   void draw(SpriteRenderer &renderer) override {
-    if(this->hitsLeft > 0) {
-      renderer.draw(*texture, vector2(boundingBox.getTopLeft().x, boundingBox.getTopLeft().y), vector2(boundingBox.getSize().x, boundingBox.getSize().y), 0, brickColors[this->hitsLeft % brickColors.size()]);
-    } else if (hitsLeft < 0) {
-      renderer.draw(*unbreakableTexture, vector2(boundingBox.getTopLeft().x, boundingBox.getTopLeft().y), vector2(boundingBox.getSize().x, boundingBox.getSize().y), 0);
+    if(this->getStatus()) {
+      if(this->hitsLeft > 0) {
+        renderer.draw(*texture, boundingBox.getTopLeft().xy(), boundingBox.getSize().xy(), 0, brickColors[this->hitsLeft % brickColors.size()]);
+      } else if (hitsLeft < 0) {
+        renderer.draw(*unbreakableTexture, boundingBox.getTopLeft().xy(), boundingBox.getSize().xy(), 0);
+      }
     }
   }
 };
@@ -268,15 +276,15 @@ public:
     int brick_height = height * 0.75 / rows - margin;
     int brick_width = width / columns - margin;
 
-//    int left = -((int)width >> 1) + (width - (brick_width + margin) * columns) / 2; //centered
-//    int top = ((int)height >> 1) - brick_height + margin;
+    int left = -((int)width >> 1) + (width - (brick_width + margin) * columns) / 2; //centered
+    int top = ((int)height >> 1) - brick_height + margin;
 
 
     for(auto &brick : bricks) {
       brick->setSize(vector(brick_width, brick_height, halfDepth * 2));
       brick->setTopLeft(vector(
-                          (int)brick->getJ() * (margin + (int)brick_width),
-                          (int)brick->getI() * (margin + (int)brick_height),
+                          left + (int)brick->getJ() * (margin + (int)brick_width),
+                          top - (int)brick->getI() * (margin + (int)brick_height),
                           halfDepth));
     }
   }
