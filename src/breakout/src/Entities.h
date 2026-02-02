@@ -285,7 +285,7 @@ public:
       brick->setTopLeft(vector(
                           left + (int)brick->getJ() * (margin + (int)brick_width),
                           top - (int)brick->getI() * (margin + (int)brick_height),
-                          halfDepth));
+                          -halfDepth));
     }
   }
 
