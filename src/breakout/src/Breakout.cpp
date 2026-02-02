@@ -76,7 +76,7 @@ public:
 
     background.onScreenResize(width, height);
     border.onScreenResize(width, height);
-//    ball.resize(width, height);
+    ball.onScreenResize(width, height);
     paddle.onScreenResize(width, height);
     level.onScreenResize(width, height);
   }
@@ -104,9 +104,9 @@ public:
   LoopResult doLoop() override {
     background.draw(spriteRenderer);
     border.draw(spriteRenderer);
+    level.draw(spriteRenderer);
     ball.draw(spriteRenderer);
     paddle.draw(spriteRenderer);
-    level.draw(spriteRenderer);
 
 
     return LoopResult::CONTINUE;

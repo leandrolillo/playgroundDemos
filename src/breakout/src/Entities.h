@@ -33,7 +33,7 @@ public:
 
   void onScreenResize(unsigned int width, unsigned int height) override {
     sprite.setPosition(vector2(width * -0.5, height * -0.5));
-    sprite.setSize(vector2(width * 0.5, height * 0.5));
+    sprite.setSize(vector2(width, height));
   }
 
   void initialize() override {
@@ -42,7 +42,7 @@ public:
 
   void draw(SpriteRenderer &renderer) override {
     renderer.draw(sprite);
-    renderer.draw(*sprite.getTexture(), sprite.getPosition() + sprite.getSize(), sprite.getSize(), 0);
+    //renderer.draw(*sprite.getTexture(), sprite.getPosition() + sprite.getSize(), sprite.getSize(), 0);
   }
 };
 
@@ -304,6 +304,7 @@ public:
         for(unsigned int j = 0; j < levelDescription->getColumns(); j++) {
           if(levelDescription->getBrickAt(i, j) != 0) {
             this->bricks.push_back(std::make_unique<Brick>(resourceManager, particleManager, i, j, levelDescription->getBrickAt(i, j)));
+            this->bricks.back()->initialize();
           }
         }
       }
