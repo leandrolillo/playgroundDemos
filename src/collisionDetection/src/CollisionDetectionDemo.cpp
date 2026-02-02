@@ -113,7 +113,7 @@ public:
 //	    skyboxRenderer.setSize(200);
 
       logger->debug("Setting up video");
-      video.enable(VideoAttribute::BLEND, SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
+      video.enable(VideoAttribute::BLEND, VideoAttribute::SRC_ALPHA, VideoAttribute::ONE_MINUS_SRC_ALPHA);
 
       /**
        * Add all particles to particle manager and colliding particles to collidingParticles list for internal management

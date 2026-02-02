@@ -73,7 +73,7 @@ public:
       return false;
     }
 
-    video.enable(VideoAttribute::BLEND, SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
+    video.enable(VideoAttribute::BLEND, VideoAttribute::SRC_ALPHA, VideoAttribute::ONE_MINUS_SRC_ALPHA);
 
     reset();
 

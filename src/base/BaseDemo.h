@@ -55,9 +55,9 @@ protected:
 
     //logger->debug("Setting up video %d", video);
     video.setClearColor(0.0, 0.5, 0.0, 0.0);
-    video.enable(VideoAttribute::DEPTH_TEST, true);
-    video.enable(VideoAttribute::CULL_FACE, CULL_FACE_BACK);
-    //video.enable(BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    video.enable(VideoAttribute::DEPTH_TEST);
+    video.enable(VideoAttribute::CULL_FACE, VideoAttribute::BACK);
+    video.enable(VideoAttribute::BLEND, VideoAttribute::SRC_ALPHA, VideoAttribute::ONE_MINUS_SRC_ALPHA);
 
     logger->debug("Completed initialization");
 

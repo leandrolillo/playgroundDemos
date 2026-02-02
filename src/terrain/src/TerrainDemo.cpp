@@ -139,22 +139,21 @@ public:
     physics = (PhysicsRunner*) this->getContainer().getRequiredRunner(PhysicsRunner::ID);
     physics->getParticleManager().addForce(std::make_unique<Gravity>(vector(0.0, -9.8, 0.0)));
 
-    video.enable(VideoAttribute::RELATIVE_MOUSE_MODE, 0);
-    video.enable(VideoAttribute::BLEND, SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
-    ResourceManager &resourceManager = this->getResourceManager();
+    video.enable(VideoAttribute::RELATIVE_MOUSE_MODE);
+    video.enable(VideoAttribute::BLEND, VideoAttribute::SRC_ALPHA, VideoAttribute::ONE_MINUS_SRC_ALPHA);
 
-    treeTexture = (TextureResource*) resourceManager.load("images/lowPolyTree.png", MimeTypes::TEXTURE);
+    treeTexture = (TextureResource*) getResourceManager().load("images/lowPolyTree.png", MimeTypes::TEXTURE);
 
     /**
      * If the object has no name in the obj file, we put the filename as the object name, thus we have to request it with a duplicated name.
      * Review the single object use case to see if there's a better option
      */
-    if ((tree = (VertexArrayResource*) resourceManager.load("geometry/lowPolyTree.obj/lowPolyTree.obj", MimeTypes::VERTEXARRAY)) == null) {
+    if ((tree = (VertexArrayResource*) getResourceManager().load("geometry/lowPolyTree.obj/lowPolyTree.obj", MimeTypes::VERTEXARRAY)) == null) {
       logger->error("Could not load tree model");
       return false;
     }
 
-    terrain = (TerrainResource*) resourceManager.load("geometry/terrain/terrain.json", "video/terrain");
+    terrain = (TerrainResource*) getResourceManager().load("geometry/terrain/terrain.json", "video/terrain");
     if (!terrain) {
       throw std::invalid_argument("Could not load terrain geometry/terrain/terrain.json");
     }

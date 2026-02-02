@@ -69,9 +69,6 @@ private:
     toonRenderer.setMaterial(&material);
     toonRenderer.setTexture(pngTexture);
 
-    video.enable(VideoAttribute::DEPTH_TEST, true);
-    video.enable(VideoAttribute::CULL_FACE, CULL_FACE_BACK);
-
     reset();
     return true;
   }
@@ -116,7 +113,7 @@ private:
     /**
      * Render default renderer objects
      */
-    defaultRenderer.clear();
+    //defaultRenderer.clear();
     defaultRenderer.setMaterial(&material);
 
     //draw axis for viewer reference
@@ -139,7 +136,7 @@ private:
         matriz_4x4::base(
             matriz_3x3::matrizRotacion(0.0f, radian(rotation), 0.0f),
             vector3(-2.0, -1.0, 0.0)));
-    defaultRenderer.render(camera);
+    //defaultRenderer.render(camera);
 
     rotation += 0.1;
 
