@@ -69,7 +69,7 @@ public:
 
   virtual void onResize(unsigned int width, unsigned int height) override {
     //camera.setOrthographicProjection(0, 0, width, height, zMin, zMax);
-    camera.setOrthographicProjection(0, height, width, 0, zMin, zMax);
+    camera.setOrthographicProjection(width * -0.5, height * -0.5, width * 0.5, height * 0.5, zMin, zMax);
     //camera.setOrthographicProjection(width, height, zMin, zMax);
 
     background.onScreenResize(width, height);
