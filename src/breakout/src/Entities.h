@@ -27,12 +27,12 @@ class Background: public Entity {
 public:
   Background(ResourceManager &resourceManager) :
     Entity(resourceManager),
-    sprite(null, vector2(0, 0), vector2(0, 0), 0, vector3(0, 0, 0))
+    sprite(null, vector2(0, 0), vector2(0, 0), 0)
   {
   }
 
   void onScreenResize(unsigned int width, unsigned int height) override {
-    sprite.setSize(vector2(width, height));
+    sprite.setSize(vector2(width * 0.5, height * 0.5));
   }
 
   void initialize() override {
@@ -41,9 +41,7 @@ public:
 
   void draw(SpriteRenderer &renderer) override {
     renderer.draw(sprite);
-//    const TextureResource *previousTexture = renderer.setTexture(texture);
-//    renderer.drawBox(matriz_4x4::traslacion(0,  0, 0), vector(width, height, 1));
-//    renderer.setTexture(previousTexture);
+    renderer.draw(*sprite.getTexture(), sprite.getSize(), sprite.getSize(), 0);
   }
 };
 
@@ -81,7 +79,7 @@ public:
   }
 
   void draw(SpriteRenderer &renderer) override {
-//    renderer.render(top);
+//    renderer.render(top)
 //    renderer.render(bottom);
 //    renderer.render(left);
 //    renderer.render(right);
@@ -91,6 +89,7 @@ public:
 class Object : public Entity {
 protected:
   Particle &particle;
+  TextureResource *texture = null;
 public:
   Object(ResourceManager &resourceManager, Particle &particle) :
     Entity(resourceManager),
@@ -109,9 +108,9 @@ public:
     return this->particle.getPosition();
   }
 
-  void draw(SpriteRenderer &renderer) override {
-    //renderer.render(particle.getBoundingVolume());
-  }
+//  void draw(SpriteRenderer &renderer) override {
+//    //renderer.render(particle.getBoundingVolume());
+//  }
 };
 
 class Paddle : public Object {
@@ -124,13 +123,23 @@ public:
 
   void onScreenResize(unsigned int width, unsigned int height) override {
     particle.setPosition(vector(
-        particle.getPosition().x,
+        width * 0.5,
         height * -0.5 + 2.0 * ((AABB &)particle.getBoundingVolume()).getHalfSizes().y,
         particle.getPosition().z));
   }
 
-  const vector &getHalfSizes() {
-    return ((AABB &)particle.getBoundingVolume()).getHalfSizes();
+  const vector &getSize() {
+    return ((AABB &)particle.getBoundingVolume()).getSize();
+  }
+
+  void initialize() override {
+    texture = (TextureResource *)resourceManager.load("images/paddle.png", MimeTypes::TEXTURE);
+  }
+
+  void draw(SpriteRenderer &renderer) override {
+    AABB &boundingBox = (AABB &)particle.getBoundingVolume();
+
+    renderer.draw(*texture, vector2(boundingBox.getTopLeft().x, boundingBox.getTopLeft().y), vector2(boundingBox.getSize().x, boundingBox.getSize().y), 0);
   }
 };
 
@@ -146,6 +155,19 @@ public:
   real getRadius() {
     return ((Sphere &)particle.getBoundingVolume()).getRadius();
   }
+
+  void initialize() override {
+    texture = (TextureResource *)resourceManager.load("images/awesomeface.png", MimeTypes::TEXTURE);
+  }
+
+  void draw(SpriteRenderer &renderer) override {
+    Sphere &boundingSphere = (Sphere &)particle.getBoundingVolume();
+
+    vector2 halfSizes(boundingSphere.getRadius(), boundingSphere.getRadius());
+    vector2 topLeft = vector2(boundingSphere.getOrigin().x , boundingSphere.getOrigin().y) - halfSizes;
+
+    renderer.draw(*texture, topLeft, halfSizes * 2, 0, vector3(1.0, 1.0, 1.0));
+  }
 };
 
 class Brick: public Entity { //could be an object if added as particle instead of scenery
@@ -155,6 +177,11 @@ class Brick: public Entity { //could be an object if added as particle instead o
   unsigned int j;
   unsigned int hitsLeft;
   AABB &boundingBox;
+
+  TextureResource *texture = null;
+  TextureResource *unbreakableTexture = null;
+
+  inline static const auto brickColors = std::array {vector3(1.0, 0.0, 0.0), vector3(0.0, 1.0, 0.0), vector3(0.0, 0.0, 1.0), vector3(1.0, 1.0, 0.0), vector3(1.0, 0.0, 1.0), vector3(0.0, 1.0, 1.0)};
 public:
   Brick(ResourceManager &resourceManager, ParticleManager &particleManager, unsigned int i, unsigned int j, unsigned int hitsLeft) :
     Entity(resourceManager),
@@ -171,7 +198,7 @@ public:
 
   void onCollision() {
     this->hitsLeft--;
-    this->setStatus(this->hitsLeft <= 0);
+    this->setStatus(this->hitsLeft != 0);
   }
 
   unsigned int getI() {
@@ -182,12 +209,12 @@ public:
     return this->j;
   }
 
-  void setPosition(const vector &position) {
-    this->boundingBox.setPosition(position);
+  void setTopLeft(const vector &position) {
+    this->boundingBox.setTopLeft(position);
   }
 
-  void setHalfSizes(const vector &halfSizes) {
-    this->boundingBox.setHalfSizes(halfSizes);
+  void setSize(const vector &size) {
+    this->boundingBox.setHalfSizes(size * 0.5);
   }
 
   AABB &getBoundingBox() const {
@@ -202,7 +229,17 @@ public:
     this->boundingBox.setStatus(status);
   }
 
+  void initialize() override {
+      texture = (TextureResource *)resourceManager.load("images/block.png", MimeTypes::TEXTURE);
+      unbreakableTexture = (TextureResource *)resourceManager.load("images/block_solid.png", MimeTypes::TEXTURE);
+    }
+
   void draw(SpriteRenderer &renderer) override {
+    if(this->hitsLeft > 0) {
+      renderer.draw(*texture, vector2(boundingBox.getTopLeft().x, boundingBox.getTopLeft().y), vector2(boundingBox.getSize().x, boundingBox.getSize().y), 0, brickColors[this->hitsLeft % brickColors.size()]);
+    } else if (hitsLeft < 0) {
+      renderer.draw(*unbreakableTexture, vector2(boundingBox.getTopLeft().x, boundingBox.getTopLeft().y), vector2(boundingBox.getSize().x, boundingBox.getSize().y), 0);
+    }
   }
 };
 
@@ -231,21 +268,17 @@ public:
     int brick_height = height * 0.75 / rows - margin;
     int brick_width = width / columns - margin;
 
-    int left = -((int)width >> 1) + (width - (brick_width + margin) * columns) / 2; //centered
-    int top = ((int)height >> 1) - brick_height + margin;
+//    int left = -((int)width >> 1) + (width - (brick_width + margin) * columns) / 2; //centered
+//    int top = ((int)height >> 1) - brick_height + margin;
 
 
     for(auto &brick : bricks) {
-      brick->setHalfSizes(vector((int)brick_width >> 1, (int)brick_height >> 1, halfDepth));
-      brick->setPosition(vector(left + (int)brick->getJ() * (margin + (int)brick_width), top - (int)brick->getI() * (margin + (int)brick_height), -halfDepth));
+      brick->setSize(vector(brick_width, brick_height, halfDepth * 2));
+      brick->setTopLeft(vector(
+                          (int)brick->getJ() * (margin + (int)brick_width),
+                          (int)brick->getI() * (margin + (int)brick_height),
+                          halfDepth));
     }
-
-//    for(unsigned int i = 0; i < level->getRows(); i++) {
-//      for(unsigned int j = 0; j < level->getColumns(); j++) {
-//        this->bricks[i * level->getColumns() + j]->setHalfSizes(vector((int)brick_width >> 1, (int)brick_height >> 1, halfDepth));
-//        this->bricks[i * level->getColumns() + j]->setPosition(vector(left + (int)j * (margin + (int)brick_width), top - (int)i * (margin + (int)brick_height), -halfDepth));
-//      }
-//    }
   }
 
   void initialize() override {

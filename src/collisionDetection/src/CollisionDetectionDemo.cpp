@@ -56,7 +56,7 @@ class CollisionDetectionDemoRunner: public BaseDemoRunner {
 public:
     using BaseDemoRunner::BaseDemoRunner; //inherit constructors
 
-//    virtual void onResize(unsigned int height, unsigned int width) override {
+//    virtual void onResize(unsigned int width, unsigned int height) override {
 //      camera.setProjectionMatrix(Camera::orthographicProjection(5.0, (double) width / (double) height, -20.0, 100.0));
 //    }
 

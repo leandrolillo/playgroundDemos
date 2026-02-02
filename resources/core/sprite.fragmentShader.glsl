@@ -4,7 +4,7 @@ in vec2 textureCoordinates;
 out vec4 fragmentColor;
  
 uniform sampler2D image;
-uniform vec3 color;
+uniform vec3 color = vec3(1.0, 1.0, 1.0);
 
 void main()
 {

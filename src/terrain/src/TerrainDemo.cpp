@@ -124,7 +124,7 @@ private:
 public:
   using BaseDemoRunner::BaseDemoRunner; //inherit constructors
 
-  virtual void onResize(unsigned int height, unsigned int width) override {
+  virtual void onResize(unsigned int width, unsigned int height) override {
     /**
      * perspective projection zFar needs to be at least the size of skybox hypotenuse (sqrt(skybox size^2 + skybox size^2)
      */

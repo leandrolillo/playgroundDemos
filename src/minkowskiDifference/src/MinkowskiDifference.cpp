@@ -112,7 +112,7 @@ public:
     return LoopResult::CONTINUE;
   }
 
-  virtual void onResize(unsigned int height, unsigned int width) override {
+  virtual void onResize(unsigned int width, unsigned int height) override {
     //camera.setPerspectiveProjectionFov(45.0, (GLfloat) width / (GLfloat) height, 0.1, zMax);
     camera.setOrthographicProjection(width, height, zMin, zMax);
   }

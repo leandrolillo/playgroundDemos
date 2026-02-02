@@ -67,9 +67,10 @@ public:
     return true;
   }
 
-  virtual void onResize(unsigned int height, unsigned int width) override {
-    //camera.setOrthographicProjection(0, height, width, 0, zMin, zMax);
-    camera.setOrthographicProjection(width, height, zMin, zMax);
+  virtual void onResize(unsigned int width, unsigned int height) override {
+    //camera.setOrthographicProjection(0, 0, width, height, zMin, zMax);
+    camera.setOrthographicProjection(0, height, width, 0, zMin, zMax);
+    //camera.setOrthographicProjection(width, height, zMin, zMax);
 
     background.onScreenResize(width, height);
     border.onScreenResize(width, height);
@@ -82,13 +83,13 @@ public:
   std::uniform_real_distribution<real> speedDistribution {-100, 100};
 
   bool reset() {
-    camera.setPosition(vector(0, 0, -10));
+    camera.setPosition(vector(0, 0, 0));
 
     real direction = directionDistribution(mtRNE);
     real speed = BALL_VELOCITY + speedDistribution(mtRNE);
 
     //logger->info("Ball random values - angle [%.2f], module [%.2f]", angulo, modulo);
-    real ballY = paddle.getPosition().y + paddle.getHalfSizes().y + ball.getRadius();
+    real ballY = paddle.getPosition().y + paddle.getSize().y * 0.5 + ball.getRadius();
     ball.setPosition(vector(0, ballY, 0));
     ball.setVelocity(vector(speed * cos(radian(direction)), speed * sin(radian(direction)), 0));
 
@@ -110,6 +111,7 @@ public:
   }
 
   virtual void onMouseWheel(int wheel) override {
+    logger->info("Camera before: [%s]", camera.toString().c_str());
     vector position = camera.getPosition() - vector(0.0, 0.0, std::min(1.0, 0.1 * wheel));
     position.z = std::max(zMin + 1, std::min(zMax - 1, position.z));
     camera.setPosition(position);
