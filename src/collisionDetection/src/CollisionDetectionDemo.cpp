@@ -107,8 +107,6 @@ public:
     bool initialize() override {
     	BaseDemoRunner::initialize();
 
-      this->video.resize(800, 600);
-
       logger->debug("Initializing renderers");
 //	    skyboxRenderer.setSize(200);
 
