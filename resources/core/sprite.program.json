@@ -1,0 +1,4 @@
+{
+	"vertexShaders": ["sprite.vertexShader.glsl"],
+	"fragmentShaders": ["sprite.fragmentShader.glsl"]
+}

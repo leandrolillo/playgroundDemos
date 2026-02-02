@@ -102,8 +102,8 @@ private:
 
   LightResource light {vector(0, 0, 0), vector(0.2f, 0.2f, 0.2f), vector(0.2f, 0.2f, 0.2f), vector(0.1f, 0.1f, 0.1f), 1.0f};
 
-  TerrainRenderer terrainRenderer;
-  SkyboxRenderer skyboxRenderer;
+  TerrainRenderer terrainRenderer { video };
+  SkyboxRenderer skyboxRenderer { video };
   ParticleManagerRenderer particleManagerRenderer {defaultRenderer};
 
 
@@ -124,7 +124,7 @@ private:
 public:
   using BaseDemoRunner::BaseDemoRunner; //inherit constructors
 
-  virtual void onResize(unsigned int height, unsigned int width) override {
+  virtual void onResize(unsigned int width, unsigned int height) override {
     /**
      * perspective projection zFar needs to be at least the size of skybox hypotenuse (sqrt(skybox size^2 + skybox size^2)
      */
@@ -139,22 +139,21 @@ public:
     physics = (PhysicsRunner*) this->getContainer().getRequiredRunner(PhysicsRunner::ID);
     physics->getParticleManager().addForce(std::make_unique<Gravity>(vector(0.0, -9.8, 0.0)));
 
-    video->enable(RELATIVE_MOUSE_MODE, 0);
-    video->enable(BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    ResourceManager &resourceManager = this->getResourceManager();
+    video.enable(VideoAttribute::RELATIVE_MOUSE_MODE);
+    video.enable(VideoAttribute::BLEND, VideoAttribute::SRC_ALPHA, VideoAttribute::ONE_MINUS_SRC_ALPHA);
 
-    treeTexture = (TextureResource*) resourceManager.load("images/lowPolyTree.png", MimeTypes::TEXTURE);
+    treeTexture = (TextureResource*) getResourceManager().load("images/lowPolyTree.png", MimeTypes::TEXTURE);
 
     /**
      * If the object has no name in the obj file, we put the filename as the object name, thus we have to request it with a duplicated name.
      * Review the single object use case to see if there's a better option
      */
-    if ((tree = (VertexArrayResource*) resourceManager.load("geometry/lowPolyTree.obj/lowPolyTree.obj", MimeTypes::VERTEXARRAY)) == null) {
+    if ((tree = (VertexArrayResource*) getResourceManager().load("geometry/lowPolyTree.obj/lowPolyTree.obj", MimeTypes::VERTEXARRAY)) == null) {
       logger->error("Could not load tree model");
       return false;
     }
 
-    terrain = (TerrainResource*) resourceManager.load("geometry/terrain/terrain.json", "video/terrain");
+    terrain = (TerrainResource*) getResourceManager().load("geometry/terrain/terrain.json", "video/terrain");
     if (!terrain) {
       throw std::invalid_argument("Could not load terrain geometry/terrain/terrain.json");
     }
@@ -162,7 +161,6 @@ public:
     fpsInputController.setTerrain(terrain);
     thirdPersonController.setTerrain(terrain);
 
-    terrainRenderer.setVideoRunner(*video);
     terrainRenderer.setLight(&light);
     terrainRenderer.addTerrain(vector(0, 0, 0), terrain);
     terrainRenderer.addTerrain(vector(-terrain->getHeightMap()->getWidth(), 0, 0), terrain);
@@ -186,7 +184,6 @@ public:
     terrainBoundingVolume->addChildren(std::make_unique<HeightMapGeometry>(vector(0, 0, -terrain->getHeightMap()->getDepth()), *terrain->getHeightMap()));
     terrainBoundingVolume->addChildren(std::make_unique<HeightMapGeometry>(vector(-terrain->getHeightMap()->getWidth(), 0, -terrain->getHeightMap()->getDepth()), *terrain->getHeightMap()));
 
-    skyboxRenderer.setVideoRunner(*video);
     skyboxRenderer.setSize(300);
 
 
@@ -315,7 +312,7 @@ public:
   virtual void onMouseMove(int x, int y, int dx, int dy, unsigned int buttons) override {
     if (dx != 0 || dy != 0) {
       inputController->mouseMove(x, y, dx, dy);
-      this->video->setMousePosition(video->getScreenWidth() >> 1, video->getScreenHeight() >> 1);
+      this->video.setMousePosition(video.getScreenWidth() >> 1, video.getScreenHeight() >> 1);
     }
   }
 

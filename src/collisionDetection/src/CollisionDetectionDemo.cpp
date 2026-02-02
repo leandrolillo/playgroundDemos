@@ -49,14 +49,14 @@ class CollisionDetectionDemoRunner: public BaseDemoRunner {
     vector2 startPosition;
     vector2 endPosition;
 
-    SkyboxRenderer skyboxRenderer;
-    GridRenderer gridRenderer;
+    SkyboxRenderer skyboxRenderer {video};
+    GridRenderer gridRenderer {video};
     ParticleManagerRenderer particleManagerRenderer { defaultRenderer };
 
 public:
     using BaseDemoRunner::BaseDemoRunner; //inherit constructors
 
-//    virtual void onResize(unsigned int height, unsigned int width) override {
+//    virtual void onResize(unsigned int width, unsigned int height) override {
 //      camera.setProjectionMatrix(Camera::orthographicProjection(5.0, (double) width / (double) height, -20.0, 100.0));
 //    }
 
@@ -107,15 +107,11 @@ public:
     bool initialize() override {
     	BaseDemoRunner::initialize();
 
-      this->video->resize(800, 600);
-
       logger->debug("Initializing renderers");
-      gridRenderer.setVideoRunner(*video);
-//	    skyboxRenderer.setVideoRunner(video);
 //	    skyboxRenderer.setSize(200);
 
-      logger->debug("Setting up video %d", video);
-      video->enable(BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      logger->debug("Setting up video");
+      video.enable(VideoAttribute::BLEND, VideoAttribute::SRC_ALPHA, VideoAttribute::ONE_MINUS_SRC_ALPHA);
 
       /**
        * Add all particles to particle manager and colliding particles to collidingParticles list for internal management
@@ -168,7 +164,7 @@ public:
 
   void onMouseMove(int x, int y, int dx, int dy, unsigned int buttons) override {
     Line line(camera.getPosition(),
-        camera.unproject((unsigned int) x, (unsigned int) y, video->getScreenWidth(), video->getScreenHeight()).normalizado());
+        camera.unproject((unsigned int) x, (unsigned int) y, video.getScreenWidth(), video.getScreenHeight()).normalizado());
 
     if (!equalsZeroAbsoluteMargin(line.getDirection().z)) {
       bool somethingMoved = false;
@@ -208,7 +204,7 @@ public:
             this->startPosition = vector2(x, y);
 
             Line line(camera.getPosition(),
-                    camera.unproject((unsigned int) x, (unsigned int) y, video->getScreenWidth(), video->getScreenHeight()).normalizado());
+                    camera.unproject((unsigned int) x, (unsigned int) y, video.getScreenWidth(), video.getScreenHeight()).normalizado());
 
             for(auto &particle : collidingParticles) {
                 if (intersectionTester.intersects(particle->getBoundingVolume(), (Geometry &)line)) {

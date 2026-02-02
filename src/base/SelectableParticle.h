@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Particle.h"
 
 class SelectableParticle: public Particle {

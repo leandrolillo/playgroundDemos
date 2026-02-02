@@ -5,9 +5,10 @@
 
 #include "Entities.h"
 #include "BreakoutLevelAdapter.h"
+#include "SpriteRenderer.h"
 
-constexpr real zMin = -1000;
-constexpr real zMax = 1000;
+constexpr real zMin = -1;
+constexpr real zMax = 1;
 
 static std::mt19937 mtRNE(std::chrono::system_clock::now().time_since_epoch().count()); //random number engine
 
@@ -20,24 +21,37 @@ constexpr real PADDLE_WIDTH = 60;
 constexpr real PADDLE_HEIGHT = 10;
 
 class BreakoutRunner: public BaseDemoRunner {
-  GeometryRenderer geometryRenderer { defaultRenderer };
+  //GeometryRenderer geometryRenderer { defaultRenderer };
+  SpriteRenderer spriteRenderer { video };
+
   PhysicsRunner *physics {(PhysicsRunner*) this->getContainer().getRequiredRunner(PhysicsRunner::ID)};
 
   LightResource light{ vector(0, 0, 0), vector(1, 1, 1), vector(1, 1, 1), vector(1, 1, 1), 1.0f };
 
-  Background background { resourceManager, defaultRenderer};
-  Border border { physics->getParticleManager(), geometryRenderer, DEPTH};
-  Paddle paddle { physics->getParticleManager(), geometryRenderer, PADDLE_WIDTH, PADDLE_HEIGHT, DEPTH};
-  Ball ball { physics->getParticleManager(), geometryRenderer, 10 };
-  Level level { resourceManager, physics->getParticleManager(), geometryRenderer, DEPTH};
+  Background background { resourceManager };
+  Border border { resourceManager, physics->getParticleManager(), DEPTH};
+  Paddle paddle { resourceManager, physics->getParticleManager(), PADDLE_WIDTH, PADDLE_HEIGHT, DEPTH};
+  Ball ball { resourceManager, physics->getParticleManager(), 10 };
+  Level level { resourceManager, physics->getParticleManager(), DEPTH};
 
 public:
   using BaseDemoRunner::BaseDemoRunner; //inherit constructors
+
+  virtual void beforeLoop() override { //use sprite renderer instead
+    spriteRenderer.clear();
+  }
+
+  virtual void afterLoop() override {
+    spriteRenderer.render(camera);
+  }
+
 
   bool initialize() override {
     if (!BaseDemoRunner::initialize()) {
       return false;
     }
+
+    video.enable(VideoAttribute::RELATIVE_MOUSE_MODE);
 
     this->getResourceManager().addAdapter<BreakoutLevelAdapter>();
 
@@ -55,27 +69,29 @@ public:
     return true;
   }
 
-  virtual void onResize(unsigned int height, unsigned int width) override {
+  virtual void onResize(unsigned int width, unsigned int height) override {
+    //camera.setOrthographicProjection(0, 0, width, height, zMin, zMax);
+    //camera.setOrthographicProjection(width * -0.5, height * -0.5, width * 0.5, height * 0.5, zMin, zMax);
     camera.setOrthographicProjection(width, height, zMin, zMax);
 
-    background.resize(width, height);
-    border.resize(width, height);
-//    ball.resize(width, height);
-    paddle.resize(width, height);
-    level.resize(width, height);
+    background.onScreenResize(width, height);
+    border.onScreenResize(width, height);
+    ball.onScreenResize(width, height);
+    paddle.onScreenResize(width, height);
+    level.onScreenResize(width, height);
   }
 
   std::uniform_real_distribution<real> directionDistribution {10, 170};
   std::uniform_real_distribution<real> speedDistribution {-100, 100};
 
   bool reset() {
-    camera.setPosition(vector(0, 0, -10));
+    camera.setPosition(vector(0, 0, 0));
 
     real direction = directionDistribution(mtRNE);
     real speed = BALL_VELOCITY + speedDistribution(mtRNE);
 
     //logger->info("Ball random values - angle [%.2f], module [%.2f]", angulo, modulo);
-    real ballY = paddle.getPosition().y + paddle.getHalfSizes().y + ball.getRadius();
+    real ballY = paddle.getPosition().y + paddle.getSize().y * 0.5 + ball.getRadius();
     ball.setPosition(vector(0, ballY, 0));
     ball.setVelocity(vector(speed * cos(radian(direction)), speed * sin(radian(direction)), 0));
 
@@ -86,17 +102,18 @@ public:
 
 
   LoopResult doLoop() override {
-    background.draw();
-    border.draw();
-    ball.draw();
-    paddle.draw();
-    level.draw();
+    background.draw(spriteRenderer);
+    border.draw(spriteRenderer);
+    level.draw(spriteRenderer);
+    ball.draw(spriteRenderer);
+    paddle.draw(spriteRenderer);
 
 
     return LoopResult::CONTINUE;
   }
 
   virtual void onMouseWheel(int wheel) override {
+    logger->info("Camera before: [%s]", camera.toString().c_str());
     vector position = camera.getPosition() - vector(0.0, 0.0, std::min(1.0, 0.1 * wheel));
     position.z = std::max(zMin + 1, std::min(zMax - 1, position.z));
     camera.setPosition(position);

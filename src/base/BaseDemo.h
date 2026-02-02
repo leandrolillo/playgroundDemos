@@ -20,14 +20,18 @@
 class BaseDemoRunner: public PlaygroundRunner {
 protected:
   Logger *logger = LoggerFactory::getLogger(typeid(*this).name());
-  VideoRunner *video = null;
-  AudioRunner *audio = null;
+  VideoRunner &video;
+  AudioRunner &audio;
 
   DefaultRenderer defaultRenderer;
 
   Camera camera;
   public:
-  BaseDemoRunner(Playground &container) : PlaygroundRunner(container) {
+  BaseDemoRunner(Playground &container) : PlaygroundRunner(container),
+    video(*(VideoRunner *)this->getContainer().getRequiredRunner(VideoRunner::ID)),
+    audio(*(AudioRunner *)this->getContainer().getRequiredRunner(AudioRunner::ID)),
+    defaultRenderer(video)
+  {
     logger->addAppender(LoggerFactory::getAppender("stdout"));
   }
 
@@ -39,26 +43,21 @@ protected:
     return KEY_DOWN | KEY_UP | MOUSE_MOVE | MOUSE_WHEEL | MOUSE_BUTTON_DOWN | MOUSE_BUTTON_UP | RESIZE;
   }
 
-  virtual void onResize(unsigned int height, unsigned int width) override {
+  virtual void onResize(unsigned int width, unsigned int height) override {
     camera.setPerspectiveProjectionFov(45.0, (double) width / (double) height, 2, 300.0);
   }
 
   virtual bool initialize() override {
-    video = (VideoRunner*) this->getContainer().getRequiredRunner(VideoRunner::ID);
-    audio = (AudioRunner*) this->getContainer().getRequiredRunner(AudioRunner::ID);
 
-    this->video->resize(800, 600);
+    this->video.resize(800, 600);
 
     camera.setViewMatrix(matriz_4x4::traslacion(vector(0.0f, -0.5f, -10.0f)));
 
-    logger->debug("Initializing renderers");
-    defaultRenderer.setVideoRunner(*video);
-
-    logger->debug("Setting up video %d", video);
-    video->setClearColor(0.0, 0.5, 0.0, 0.0);
-    video->enable(DEPTH_TEST, true);
-    video->enable(CULL_FACE, CULL_FACE_BACK);
-    //video->enable(BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //logger->debug("Setting up video %d", video);
+    video.setClearColor(0.0, 0.5, 0.0, 0.0);
+    video.enable(VideoAttribute::DEPTH_TEST);
+    video.enable(VideoAttribute::CULL_FACE, VideoAttribute::BACK);
+    video.enable(VideoAttribute::BLEND, VideoAttribute::SRC_ALPHA, VideoAttribute::ONE_MINUS_SRC_ALPHA);
 
     logger->debug("Completed initialization");
 

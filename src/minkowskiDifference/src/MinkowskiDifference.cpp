@@ -73,7 +73,7 @@ public:
       return false;
     }
 
-    video->enable(BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    video.enable(VideoAttribute::BLEND, VideoAttribute::SRC_ALPHA, VideoAttribute::ONE_MINUS_SRC_ALPHA);
 
     reset();
 
@@ -112,7 +112,7 @@ public:
     return LoopResult::CONTINUE;
   }
 
-  virtual void onResize(unsigned int height, unsigned int width) override {
+  virtual void onResize(unsigned int width, unsigned int height) override {
     //camera.setPerspectiveProjectionFov(45.0, (GLfloat) width / (GLfloat) height, 0.1, zMax);
     camera.setOrthographicProjection(width, height, zMin, zMax);
   }
@@ -121,7 +121,7 @@ public:
     if (button == SDL_BUTTON_LEFT) {
       this->startPosition = vector2(x, y);
 
-      vector origin = camera.unproject(x, y, video->getScreenWidth(), video->getScreenHeight());
+      vector origin = camera.unproject(x, y, video.getScreenWidth(), video.getScreenHeight());
       origin.z = -origin.z;
       vector direction = vector(0, 0, -1);
       Line line(origin, direction);
@@ -151,7 +151,7 @@ public:
 
   virtual void onMouseMove(int x, int y, int dx, int dy, unsigned int buttons) override {
     if (dx != 0 || dy != 0) {
-      vector origin = camera.unproject(x, y, video->getScreenWidth(), video->getScreenHeight());
+      vector origin = camera.unproject(x, y, video.getScreenWidth(), video.getScreenHeight());
       origin.z = -origin.z;
       vector direction = vector(0, 0, -1);
       Line line(origin, direction);

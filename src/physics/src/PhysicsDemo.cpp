@@ -62,8 +62,8 @@ class PhysicsDemoRunner: public BaseDemoRunner {
    * Renderers - defaultRenderer inherited from base demo
    */
   GeometryRenderer geometryRenderer { defaultRenderer };
-  SkyboxRenderer skyboxRenderer;
-  GridRenderer gridRenderer;
+  SkyboxRenderer skyboxRenderer { video };
+  GridRenderer gridRenderer { video };
 
   TextureResource *textureResource = null;
   MaterialResource materials[3] = { MaterialResource(vector(1, 0.5, 0.5), vector(1, 0.5, 0.5), vector(1, 1, 1), 32),
@@ -98,14 +98,12 @@ class PhysicsDemoRunner: public BaseDemoRunner {
     physics = (PhysicsRunner*) this->getContainer().getRequiredRunner(PhysicsRunner::ID);
     //physics->setPlaybackSpeed(0.3);
 
-    gunshotSource = audio->createSource("audio/handgunfire.wav", vector(0, 0, 0), vector(0, 0, 0), false);
-    bounceSource = audio->createSource("audio/twang3.wav", vector(0, 0, 0), vector(0, 0, 0), false);
+    gunshotSource = audio.createSource("audio/handgunfire.wav", vector(0, 0, 0), vector(0, 0, 0), false);
+    bounceSource = audio.createSource("audio/twang3.wav", vector(0, 0, 0), vector(0, 0, 0), false);
 
     textureResource = (TextureResource*) this->getResourceManager().load("images/basketball.png", MimeTypes::TEXTURE);
     basketball = (MeshResource*) this->getResourceManager().load("geometry/basketball.json/basketball", MimeTypes::MESH);
 
-    gridRenderer.setVideoRunner(*video);
-    skyboxRenderer.setVideoRunner(*video);
     skyboxRenderer.setSize(200);
 
     defaultRenderer.setLight(&light);
@@ -174,7 +172,7 @@ class PhysicsDemoRunner: public BaseDemoRunner {
         ball->setDamping(0.99f);
     }
 
-    video->setMousePosition(video->getScreenWidth() >> 1, video->getScreenHeight() >> 1);
+    video.setMousePosition(video.getScreenWidth() >> 1, video.getScreenHeight() >> 1);
 
     camera.setPosition(breakoutPosition + vector(0.0f, 0.0f, 10.0f));
     spherePlatform->setPosition(vector(0, 0.5, 0));
@@ -239,8 +237,8 @@ class PhysicsDemoRunner: public BaseDemoRunner {
     if (contact.getRelativeSpeed() < -0.5) {
       //logger->info("Collision relative speed: %f - sound on", contact.getRelativeSpeed());
       bounceSource->setPosition(bulletParticle->getPosition());
-      audio->updateSource(bounceSource);
-      audio->playSource(bounceSource);
+      audio.updateSource(bounceSource);
+      audio.playSource(bounceSource);
     }
   }
 
@@ -277,8 +275,8 @@ class PhysicsDemoRunner: public BaseDemoRunner {
       bullet->setStatus(true);
 
       gunshotSource->setPosition(position);
-      audio->updateSource(gunshotSource);
-      audio->playSource(gunshotSource);
+      audio.updateSource(gunshotSource);
+      audio.playSource(gunshotSource);
 
       //logger->info("bullet at position: %s", bullet->getPosition().toString("%.2f").c_str());
 
@@ -289,13 +287,13 @@ class PhysicsDemoRunner: public BaseDemoRunner {
 
   void onMouseWheel(int wheel) override {
     camera.setPosition(camera.getPosition() - vector(0.0f, 0.0f, wheel));
-    audio->updateListener(camera.getPosition());
+    audio.updateListener(camera.getPosition());
     //logger->debug("camera: %s", camera.getPosition().toString("%.2f").c_str());
   }
 
   void onMouseMove(int x, int y, int dx, int dy, unsigned int buttons) override {
     camera.setPosition(camera.getPosition() - vector(0.1f * dx, 0.1f * dy, 0));
-    audio->updateListener(camera.getPosition());
+    audio.updateListener(camera.getPosition());
     //logger->debug("camera: %s", camera.getPosition().toString("%.2f").c_str());
   }
 
