@@ -52,6 +52,7 @@ public:
     }
 
     video.enable(VideoAttribute::RELATIVE_MOUSE_MODE);
+    video.enable(VideoAttribute::BLEND, VideoAttribute::SRC_ALPHA, VideoAttribute::ONE_MINUS_SRC_ALPHA);//this should be part of the renderer?
 
     this->getResourceManager().addAdapter<BreakoutLevelAdapter>();
 
@@ -107,7 +108,6 @@ public:
     level.draw(spriteRenderer);
     ball.draw(spriteRenderer);
     paddle.draw(spriteRenderer);
-
 
     return LoopResult::CONTINUE;
   }
