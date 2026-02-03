@@ -181,7 +181,7 @@ class Brick: public Entity { //could be an object if added as particle instead o
 
   unsigned int i;
   unsigned int j;
-  unsigned int hitsLeft;
+  int hitsLeft;
   AABB &boundingBox;
 
   TextureResource *texture = null;
@@ -189,7 +189,7 @@ class Brick: public Entity { //could be an object if added as particle instead o
 
   inline static const auto brickColors = std::array {vector3(1.0, 0.0, 0.0), vector3(0.0, 1.0, 0.0), vector3(0.0, 0.0, 1.0), vector3(1.0, 1.0, 0.0), vector3(1.0, 0.0, 1.0), vector3(0.0, 1.0, 1.0)};
 public:
-  Brick(ResourceManager &resourceManager, ParticleManager &particleManager, unsigned int i, unsigned int j, unsigned int hitsLeft) :
+  Brick(ResourceManager &resourceManager, ParticleManager &particleManager, unsigned int i, unsigned int j, int hitsLeft) :
     Entity(resourceManager),
     particleManager(particleManager),
     boundingBox((AABB &)particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 1, 1)))),
@@ -204,7 +204,7 @@ public:
 
   void onCollision() {
     this->hitsLeft--;
-    this->setStatus(this->hitsLeft > 0);
+    this->setStatus(this->hitsLeft != 0);
   }
 
   unsigned int getI() {

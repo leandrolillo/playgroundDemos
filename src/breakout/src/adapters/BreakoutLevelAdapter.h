@@ -18,7 +18,7 @@ protected:
 
     JsonParser parser(request.getFileParser());
     unsigned int rows = 0, columns = 0;
-    std::vector<unsigned int>bricks;
+    std::vector<int>bricks;
 
     String token;
     parser.readStartObject();
@@ -30,7 +30,7 @@ protected:
       } else if (token == "columns") {
         columns = parser.readInteger();
       } else if (token == "bricks") {
-        bricks = parser.readUnsignedIntegerArray();
+        bricks = parser.readIntegerArray();
       } else {
         logger->error("Unexpected token: [%s] at (%d, %d)", token.c_str(), parser.getLine(), parser.getColumn());
       }
