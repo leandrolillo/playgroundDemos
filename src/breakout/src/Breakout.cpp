@@ -23,6 +23,7 @@ constexpr real PADDLE_HEIGHT = 10;
 class BreakoutRunner: public BaseDemoRunner {
   //GeometryRenderer geometryRenderer { defaultRenderer };
   SpriteRenderer spriteRenderer { video };
+  FontRenderer fontRenderer { video };
 
   PhysicsRunner *physics {(PhysicsRunner*) this->getContainer().getRequiredRunner(PhysicsRunner::ID)};
 
@@ -36,15 +37,6 @@ class BreakoutRunner: public BaseDemoRunner {
 
 public:
   using BaseDemoRunner::BaseDemoRunner; //inherit constructors
-
-  virtual void beforeLoop() override { //use sprite renderer instead
-    spriteRenderer.clear();
-  }
-
-  virtual void afterLoop() override {
-    spriteRenderer.render(camera);
-  }
-
 
   bool initialize() override {
     if (!BaseDemoRunner::initialize()) {
@@ -101,6 +93,9 @@ public:
   }
 
 
+  virtual void beforeLoop() override { //use sprite renderer instead
+    spriteRenderer.clear();
+  }
 
   LoopResult doLoop() override {
     background.draw(spriteRenderer);
@@ -110,6 +105,11 @@ public:
     paddle.draw(spriteRenderer);
 
     return LoopResult::CONTINUE;
+  }
+
+  virtual void afterLoop() override {
+    spriteRenderer.render(camera);
+    fontRenderer.render(camera);
   }
 
   virtual void onMouseWheel(int wheel) override {

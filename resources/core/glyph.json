@@ -1,0 +1,12 @@
+#rectangle for rendering sprites
+{
+  data: [ 0, 1, 0, 0,            
+          0, 0, 0, 1,
+          1, 0, 1, 1 ,
+
+          0, 1, 0, 0,
+          1, 0, 1, 1,
+          1, 1, 1, 0],
+  dataComponentsPerVertex: 4,
+  type: "triangles"
+}
