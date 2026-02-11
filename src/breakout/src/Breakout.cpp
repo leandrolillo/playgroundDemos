@@ -6,6 +6,7 @@
 #include "Entities.h"
 #include "BreakoutLevelAdapter.h"
 #include "SpriteRenderer.h"
+#include "TextRenderer.h"
 
 constexpr real zMin = -1;
 constexpr real zMax = 1;
@@ -21,19 +22,18 @@ constexpr real PADDLE_WIDTH = 60;
 constexpr real PADDLE_HEIGHT = 10;
 
 class BreakoutRunner: public BaseDemoRunner {
-  //GeometryRenderer geometryRenderer { defaultRenderer };
   SpriteRenderer spriteRenderer { video };
-  FontRenderer fontRenderer { video };
+  TextRenderer textRenderer { video };
 
   PhysicsRunner *physics {(PhysicsRunner*) this->getContainer().getRequiredRunner(PhysicsRunner::ID)};
-
-  LightResource light{ vector(0, 0, 0), vector(1, 1, 1), vector(1, 1, 1), vector(1, 1, 1), 1.0f };
 
   Background background { resourceManager };
   Border border { resourceManager, physics->getParticleManager(), DEPTH};
   Paddle paddle { resourceManager, physics->getParticleManager(), PADDLE_WIDTH, PADDLE_HEIGHT, DEPTH};
   Ball ball { resourceManager, physics->getParticleManager(), 10 };
   Level level { resourceManager, physics->getParticleManager(), DEPTH};
+
+  FontResource *font;
 
 public:
   using BaseDemoRunner::BaseDemoRunner; //inherit constructors
@@ -56,6 +56,18 @@ public:
     paddle.initialize();
     ball.initialize();
     level.initialize();
+
+//    /**
+//     * Debug textures
+//     */
+    font = (FontResource *)resourceManager.load("core/NewYork.ttf");
+//    font->setTextureAtlas(background.getTexture());
+//
+    textRenderer.initialize();
+//    background.setTexture(textRenderer.getDefaultFont()->getTextureAtlas());
+
+
+    textRenderer.print("This is some beautiful text with lots of letters, no question gathered per now!", vector2(0, 100));
 
     reset();
 
@@ -95,6 +107,7 @@ public:
 
   virtual void beforeLoop() override { //use sprite renderer instead
     spriteRenderer.clear();
+    //textRenderer.clear();
   }
 
   LoopResult doLoop() override {
@@ -104,12 +117,15 @@ public:
     ball.draw(spriteRenderer);
     paddle.draw(spriteRenderer);
 
+    //textRenderer.print(*font, "This is some beautiful text with lots of letters, no question gathered per now!", vector2(0, 0));
+    //textRenderer.print("This is some beautiful text with lots of letters, no question gathered per now!", vector2(0, 100));
+
     return LoopResult::CONTINUE;
   }
 
   virtual void afterLoop() override {
     spriteRenderer.render(camera);
-    fontRenderer.render(camera);
+    textRenderer.render(camera);
   }
 
   virtual void onMouseWheel(int wheel) override {

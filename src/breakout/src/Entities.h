@@ -1,3 +1,5 @@
+#pragma once
+
 #include "BreakoutLevel.h"
 #include "SpriteRenderer.h"
 
@@ -37,7 +39,16 @@ public:
   }
 
   void initialize() override {
-    sprite.setTexture((TextureResource *)resourceManager.load("background.png", MimeTypes::TEXTURE));
+    setTexture((TextureResource *)resourceManager.load("background.png", MimeTypes::TEXTURE));
+  }
+
+  Background &setTexture(const TextureResource *texture) {
+    sprite.setTexture(texture);
+    return *this;
+  }
+
+  const TextureResource *getTexture() const {
+    return this->sprite.getTexture();
   }
 
   void draw(SpriteRenderer &renderer) override {

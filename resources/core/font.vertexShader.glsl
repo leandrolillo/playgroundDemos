@@ -1,14 +1,13 @@
 #version 330
 
-layout (location = 0) in vec3 vertex;
-
+layout (location = 0) in vec4 vertex;
 out vec2 textureCoordinates;
 
 
-mat4 projectionView;
+uniform mat4 projectionView;
 
 void main()
 {
-    gl_Position = matrices.projectionView * vec4(position.xy, 0.0f, 1.0f);
-    textureCoordinates = position.xy;
+    gl_Position = projectionView * vec4(vertex.xy, 0.0, 1.0);
+    textureCoordinates = vertex.zw;
 }
