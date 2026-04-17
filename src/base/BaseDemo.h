@@ -43,6 +43,14 @@ protected:
     return KEY_DOWN | KEY_UP | MOUSE_MOVE | MOUSE_WHEEL | MOUSE_BUTTON_DOWN | MOUSE_BUTTON_UP | RESIZE;
   }
 
+  VideoRunner &getVideo() {
+    return this->video;
+  }
+
+  AudioRunner getAudio() {
+    return this->audio;
+  }
+
   virtual void onResize(unsigned int width, unsigned int height) override {
     camera.setPerspectiveProjectionFov(45.0, (double) width / (double) height, 2, 300.0);
   }

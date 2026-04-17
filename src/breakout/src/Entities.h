@@ -330,3 +330,31 @@ public:
 
 };
 
+//
+//enum class GameStatus {
+//  MENU,
+//  RUNNING,
+//  LEVEL_TRANSITION
+//};
+//
+//class Game {
+//  std::vector<Entity *> entities;
+//  GameState &gameState;
+//
+//public:
+//  bool initialize() {
+//
+//  }
+//  void onScreenResize(unsigned int width, unsigned int height) override {
+//
+//  }
+//
+//  void update() {
+//
+//  }
+//
+//
+//};
+
+
+
