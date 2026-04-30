@@ -1,8 +1,8 @@
 #include "Breakout.h"
 
-/**
- * Menu State
- */
+/**************
+ * Menu State *
+ **************/
 void MenuState::enter(BreakoutRunner &runner) {
   runner.freeze();
 }
@@ -33,10 +33,8 @@ void MenuState::onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsi
     break;
   case SDLK_RETURN:
     if (options[currentSelection] == "New Game") {
-      breakoutRunner.reset();
-      breakoutRunner.setState(std::make_unique<StandByState>("Level 0"));
-      //TODO: reset level blocks
-
+      //breakoutRunner.reset();
+      breakoutRunner.setState(std::make_unique<StandByState>(breakoutRunner.getLevelNames()[0], true));
     } else if (options[currentSelection] == "Continue") {
       breakoutRunner.setState(std::make_unique<PlayingState>()); //TODO: Handle case were previous state was standby
     } else {
@@ -53,17 +51,31 @@ void MenuState::onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsi
   }
 }
 
-/**
- * Standby State
- */
+/*****************
+ * Standby State *
+ *****************/
 
 void StandByState::enter(BreakoutRunner &runner) {
   runner.unfreeze();
+  //TODO: disable ball so that physics manager skips it.
+
+  if(!this->levelName.empty()) {
+    runner.setCurrentLevelName(this->levelName, this->forceLoad);
+  }
 }
 
 void StandByState::update(BreakoutRunner &breakoutRunner) {
   vector2 position = vector2(-100 , 100);
-  breakoutRunner.print(this->message, position);
+
+  String message = this->levelName; //remove .json from message
+
+  auto lastIndex = message.rfind(".");
+  if(lastIndex != String::npos) {
+    message.erase(lastIndex);
+  }
+  std::replace(message.begin(), message.end(), '-', ' ');
+
+  breakoutRunner.print(message, position);
 
   breakoutRunner.syncBallWithPaddle();
 }
@@ -100,9 +112,9 @@ void StandByState::onKeyUp(BreakoutRunner &breakoutRunner, unsigned int key, uns
   }
 }
 
-/**
- * Playing State
- */
+/*****************
+ * Playing State *
+ *****************/
 
 void PlayingState::enter(BreakoutRunner &runner) {
   runner.unfreeze();
@@ -138,6 +150,25 @@ void PlayingState::onKeyUp(BreakoutRunner &breakoutRunner, unsigned int key, uns
 
   }
 }
+
+
+/*****************
+ * Transitioning State *
+ *****************/
+
+void TransitioningState::enter(BreakoutRunner &runner) {
+  runner.freeze();
+}
+
+void TransitioningState::update(BreakoutRunner &breakoutRunner) {
+  vector2 position = vector2(-100 , 100);
+  breakoutRunner.print(this->message, position);
+}
+
+void TransitioningState::onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) {
+  breakoutRunner.setState(std::move(this->nextState));
+}
+
 
 class Breakout: public Playground {
 public:

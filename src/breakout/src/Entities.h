@@ -231,11 +231,11 @@ public:
     this->setStatus(this->hitsLeft != 0);
   }
 
-  unsigned int getI() {
+  unsigned int getI() const {
     return this->i;
   }
 
-  unsigned int getJ() {
+  unsigned int getJ() const {
     return this->j;
   }
 
@@ -262,6 +262,7 @@ public:
   void initialize() override {
       texture = (TextureResource *)resourceManager.load("images/block.png", MimeTypes::TEXTURE);
       unbreakableTexture = (TextureResource *)resourceManager.load("images/block_solid.png", MimeTypes::TEXTURE);
+      boundingBox.setStatus(true);
     }
 
   void draw(SpriteRenderer &renderer) override {
@@ -276,6 +277,7 @@ public:
 };
 
 class Level: public Entity {
+  String name;
   unsigned int rows = 0;
   unsigned int columns = 0;
   real halfDepth;
@@ -287,10 +289,11 @@ class Level: public Entity {
   std::function<void()> onCompletedHandler;
 
 public:
-  Level(ResourceManager &resourceManager, ParticleManager &particleManager, real depth) :
+  Level(String name, ResourceManager &resourceManager, ParticleManager &particleManager, real depth) :
     Entity(resourceManager),
     particleManager(particleManager),
-    halfDepth(depth * 0.5)
+    halfDepth(depth * 0.5),
+    name(name)
   {
 
 
@@ -316,13 +319,18 @@ public:
   }
 
   void initialize() override {
+    load(name);
+  }
+
+  void load(String levelResourceName) {
     for(auto &brick : bricks) {
       particleManager.removeScenery(brick->getBoundingBox());
     }
     this->bricks.clear();
 
-    BreakoutLevel *levelDescription = (BreakoutLevel *)resourceManager.load("level-0.json", BreakoutLevel::MimeType);
+    BreakoutLevel *levelDescription = (BreakoutLevel *)resourceManager.load(levelResourceName, BreakoutLevel::MimeType);
     if(levelDescription) {
+      this->name = levelResourceName;
       this->rows = levelDescription->getRows();
       this->columns = levelDescription->getColumns();
 
@@ -355,40 +363,15 @@ public:
     }
   }
 
-  bool isCompleted() {
+  bool isCompleted() const {
     return this->_isCompleted;
   }
 
   void setOnCompletedHandler(std::function<void()> onCompleteHandler) {
     this->onCompletedHandler = std::move(onCompleteHandler);
   }
+
+  const String &getName() const {
+    return this->name;
+  }
 };
-
-//
-//enum class GameStatus {
-//  MENU,
-//  RUNNING,
-//  LEVEL_TRANSITION
-//};
-//
-//class Game {
-//  std::vector<Entity *> entities;
-//  GameState &gameState;
-//
-//public:
-//  bool initialize() {
-//
-//  }
-//  void onScreenResize(unsigned int width, unsigned int height) override {
-//
-//  }
-//
-//  void update() {
-//
-//  }
-//
-//
-//};
-
-
-

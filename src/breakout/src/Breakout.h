@@ -65,11 +65,12 @@ public:
 };
 
 class StandByState : public BreakoutState {
-  String message;
+  String levelName;
+  bool forceLoad;
 public:
-  StandByState(const String &message) : message(message) {
-
+  StandByState(const String &levelName, bool forceLoad = false) : levelName(levelName), forceLoad(forceLoad) {
   }
+
   void enter(BreakoutRunner &runner) override;
   void update(BreakoutRunner &breakoutRunner) override;
   void onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) override;
@@ -86,13 +87,13 @@ public:
 class TransitioningState : public BreakoutState {
   String message;
   real timeout;
-  MenuState &nextState;
+  std::unique_ptr<BreakoutState> nextState;
 public:
-  TransitioningState(const String &message, real timeout, MenuState &nextState) : message(message), timeout(timeout), nextState(nextState) {
+  TransitioningState(const String &message, real timeout, std::unique_ptr<BreakoutState> nextState) : message(message), timeout(timeout), nextState(std::move(nextState)) {
   }
   void enter(BreakoutRunner &runner) override;
   void update(BreakoutRunner &breakoutRunner) override;
-  void onKeyUp(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) override;
+  void onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) override;
 };
 
 
@@ -107,7 +108,8 @@ class BreakoutRunner: public BaseDemoRunner {
   Border border { resourceManager, physics->getParticleManager(), DEPTH};
   Paddle paddle { resourceManager, physics->getParticleManager(), PADDLE_WIDTH, PADDLE_HEIGHT, DEPTH};
   Ball ball { resourceManager, physics->getParticleManager(), 10 };
-  Level level { resourceManager, physics->getParticleManager(), DEPTH};
+  std::vector<String> levelNames = { "Level-0.json", "Level-1.json", "Level-2.json"};
+  Level level { levelNames[0], resourceManager, physics->getParticleManager(), DEPTH};
 
   FontResource *font = null;
   std::unique_ptr<BreakoutState> state;
@@ -138,10 +140,11 @@ public:
         [this](GeometryContact &contact) {
                   this->livesLeft--;
                   if(livesLeft <= 0) {
-                    this->exit();
-                    //this->setState(std::make_unique<TransitioningState("Some message making fun of you lack of spatial perception!", 10, std::make_unique<StandByState>())>);
+                    //this->exit();
+                    this->setState(std::make_unique<TransitioningState>("You died", 10.0f, std::make_unique<MenuState>(false)));
+                  } else {
+                    this->setState(std::make_unique<TransitioningState>("Some message making fun of you lack of spatial perception!", 10.0f, std::make_unique<StandByState>(level.getName())));
                   }
-
                 }
         );
     paddle.initialize();
@@ -150,14 +153,32 @@ public:
     level.initialize();
     level.setOnCompletedHandler(
         [this]() {
-          this->exit();
-          //this->setState(std::make_unique<TransitioningState("Level complete!", 10, )>);
+          String nextLevel;
+
+          //Find current level in array
+          auto it = std::find(levelNames.begin(), levelNames.end(), level.getName());
+          if (it != levelNames.end()) {
+            auto nextIt = std::next(it);
+
+            // If it was the last element, wrap around to beginning
+            if (nextIt == levelNames.end()) {
+              nextLevel = levelNames.front();
+            } else {
+              nextLevel = *nextIt;
+            }
+          }
+
+          if(!nextLevel.empty()) {
+            this->setState(std::make_unique<TransitioningState>("Level complete!", 10, std::make_unique<StandByState>(nextLevel)));
+          } else {
+            this->exit();
+          }
         });
 
 //    /**
-//     * Debug textures
+//     * Debug font textures
 //     */
-    font = (FontResource *)resourceManager.load("core/NewYork.ttf");
+//    font = (FontResource *)resourceManager.load("core/NewYork.ttf");
 //    font->setTextureAtlas(background.getTexture());
 //
 //    background.setTexture(textRenderer.getDefaultFont()->getTextureAtlas());
@@ -302,5 +323,20 @@ public:
 
   void setPaddleVelocity(const vector &velocity) {
     this->paddle.setVelocity(velocity);
+  }
+
+  const std::vector<String> &getLevelNames() const {
+    return this->levelNames;
+  }
+  const String &getCurrentLevelName() const {
+    return this->level.getName();
+  }
+  void setCurrentLevelName(const String &levelName, bool forceLoad = false) {
+    if(std::any_of(this->levelNames.begin(), this->levelNames.end(), [&levelName](auto &availableLevelName) { return availableLevelName == levelName; })) {
+      if(level.getName() != levelName || forceLoad) {
+        this->level.load(levelName);
+        this->level.onScreenResize(this->getVideo().getScreenWidth(), this->getVideo().getScreenHeight());
+      }
+    }
   }
 };
