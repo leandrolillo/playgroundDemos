@@ -36,13 +36,43 @@ public:
   virtual ~BreakoutState() {}
 };
 
+
+/**
+ * Game states:
+ * - Menu
+ *    - welcome (new game / exit). No "continue" option. Escape exits the game. New game -> standby at level 0
+ *    - paused (similar to welcome but with additional continue option). Continue (or ESC key) go back to previous {playing or standby}
+ * - standby (ball is on paddle, label with current level)
+ * - playing (playing ball)
+ * - transitioning state (display message, timeout based, with pointer to next state)
+ */
 class MenuState : public BreakoutState {
-  unsigned int currentSelection = 0;
-  std::vector<String>options {"New Game", "Exit"};
+  int currentSelection = 0;
+  bool withContinue;
+  std::vector<String>options;
 public:
+  MenuState(bool withContinue) : withContinue(withContinue) {
+    if(withContinue) {
+      options = {"New Game", "Continue", "Exit"};
+    } else {
+      options = {"New Game", "Exit"};
+    }
+  }
 
   void enter(BreakoutRunner &runner) override;
   void update(BreakoutRunner &breakoutRunner) override;
+  void onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) override;
+};
+
+class StandByState : public BreakoutState {
+  String message;
+public:
+  StandByState(const String &message) : message(message) {
+
+  }
+  void enter(BreakoutRunner &runner) override;
+  void update(BreakoutRunner &breakoutRunner) override;
+  void onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) override;
   void onKeyUp(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) override;
 };
 
@@ -53,8 +83,16 @@ public:
   void onKeyUp(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) override;
 };
 
-class LevelTransition : public BreakoutState {
-
+class TransitioningState : public BreakoutState {
+  String message;
+  real timeout;
+  MenuState &nextState;
+public:
+  TransitioningState(const String &message, real timeout, MenuState &nextState) : message(message), timeout(timeout), nextState(nextState) {
+  }
+  void enter(BreakoutRunner &runner) override;
+  void update(BreakoutRunner &breakoutRunner) override;
+  void onKeyUp(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) override;
 };
 
 
@@ -74,9 +112,11 @@ class BreakoutRunner: public BaseDemoRunner {
   FontResource *font = null;
   std::unique_ptr<BreakoutState> state;
 
+  unsigned short livesLeft = 3;
+
 public:
   BreakoutRunner(Playground &container) : BaseDemoRunner(container) {
-    setState(std::make_unique<MenuState>());
+    setState(std::make_unique<MenuState>(false));
   }
 
   bool initialize() override {
@@ -94,9 +134,25 @@ public:
 
     background.initialize();
     border.initialize();
+    border.setOnBottomCollisionHandler(
+        [this](GeometryContact &contact) {
+                  this->livesLeft--;
+                  if(livesLeft <= 0) {
+                    this->exit();
+                    //this->setState(std::make_unique<TransitioningState("Some message making fun of you lack of spatial perception!", 10, std::make_unique<StandByState>())>);
+                  }
+
+                }
+        );
     paddle.initialize();
     ball.initialize();
+
     level.initialize();
+    level.setOnCompletedHandler(
+        [this]() {
+          this->exit();
+          //this->setState(std::make_unique<TransitioningState("Level complete!", 10, )>);
+        });
 
 //    /**
 //     * Debug textures
@@ -110,7 +166,10 @@ public:
 
     textRenderer.print("This is some beautiful text with lots of letters, no question gathered per now!", vector2(0, 100));
 
-    reset();
+    //reset();
+
+    camera.setPosition(vector(0, 0, 0));
+    //this->syncBallWithPaddle();
 
     return true;
   }
@@ -143,6 +202,8 @@ public:
 
     paddle.setPosition(vector(0, paddle.getPosition().y, 0));
     paddle.setVelocity(vector(0, 0, 0));
+
+    return true;
   }
 
 
@@ -157,6 +218,8 @@ public:
     level.draw(spriteRenderer);
     ball.draw(spriteRenderer);
     paddle.draw(spriteRenderer);
+
+    textRenderer.print("Lives: " + std::to_string(this->livesLeft), vector2(this->getVideo().getScreenWidth() * -0.5 + 20, this->getVideo().getScreenHeight() * 0.5 - 40));
 
     state->update(*this);
 
@@ -182,14 +245,16 @@ public:
   //    }
   //  }
 
-    virtual void onKeyUp(unsigned int key, unsigned int keyModifier) override {
-      state->onKeyUp(*this, key, keyModifier);
-    }
+  virtual void onKeyUp(unsigned int key, unsigned int keyModifier) override {
+    state->onKeyUp(*this, key, keyModifier);
+  }
 
-    virtual void onKeyDown(unsigned int key, unsigned int keyModifier) override {
-      state->onKeyDown(*this, key, keyModifier);
-    }
+  virtual void onKeyDown(unsigned int key, unsigned int keyModifier) override {
+    state->onKeyDown(*this, key, keyModifier);
+  }
+  virtual void onMouseWheel(int wheel) override {
 
+  }
 
   void setState(std::unique_ptr<BreakoutState> state) {
     assert(state.get() != null);
@@ -207,6 +272,32 @@ public:
 
   void unfreeze() {
     this->physics->setEnabled(true);
+  }
+
+//  void standBy() {
+//    this->ball.setStatus(false);
+//    this->physics->setEnabled(true);
+//  }
+
+  void syncBallWithPaddle() {
+    this->ball.setStatus(false);
+    ball.setPosition(paddle.getPosition() + vector(0, paddle.getSize().y * 0.5 + ball.getRadius(), 0));
+  }
+
+  void playBall() {
+    real direction = directionDistribution(mtRNE);
+    real speed = BALL_VELOCITY + speedDistribution(mtRNE);
+
+    //logger->info("Ball random values - angle [%.2f], module [%.2f]", angulo, modulo);
+    ball.setPosition(paddle.getPosition() + vector(0, paddle.getSize().y * 0.5 + ball.getRadius(), 0));
+    ball.setVelocity(vector(speed * cos(radian(direction)), speed * sin(radian(direction)), 0));
+
+    this->ball.setStatus(true);
+    this->physics->setEnabled(true);
+  }
+
+  void exit() {
+    this->getContainer().stop();
   }
 
   void setPaddleVelocity(const vector &velocity) {

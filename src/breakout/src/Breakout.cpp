@@ -1,5 +1,8 @@
 #include "Breakout.h"
 
+/**
+ * Menu State
+ */
 void MenuState::enter(BreakoutRunner &runner) {
   runner.freeze();
 }
@@ -9,7 +12,7 @@ void MenuState::update(BreakoutRunner &breakoutRunner) {
 //      (breakoutRunner.getVideo().getScreenWidth() - 100) / 2,
 //      (breakoutRunner.getVideo().getScreenHeight() - 100) / 2);
 
-  vector2 position = vector2(-100 , 100);
+  vector2 position = vector2(-100 , 100); //TODO: review SpriteRenderer & TextRenderer coordinate frames
 
   for (int index = 0; index < options.size(); index++) {
     if (index == currentSelection) {
@@ -20,27 +23,86 @@ void MenuState::update(BreakoutRunner &breakoutRunner) {
   }
 }
 
-void MenuState::onKeyUp(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) {
+void MenuState::onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) {
   switch (key) {
   case SDLK_UP:
-    currentSelection = (currentSelection + 1) % options.size();
+    currentSelection = (currentSelection - 1 + options.size()) % options.size();
     break;
   case SDLK_DOWN:
-    currentSelection = (currentSelection - 1) % options.size();
+    currentSelection = (currentSelection + 1) % options.size();
     break;
   case SDLK_RETURN:
     if (options[currentSelection] == "New Game") {
       breakoutRunner.reset();
-      breakoutRunner.setState(std::make_unique<PlayingState>());
+      breakoutRunner.setState(std::make_unique<StandByState>("Level 0"));
+      //TODO: reset level blocks
+
+    } else if (options[currentSelection] == "Continue") {
+      breakoutRunner.setState(std::make_unique<PlayingState>()); //TODO: Handle case were previous state was standby
     } else {
-      breakoutRunner.getContainer().stop();
+      breakoutRunner.exit();
     }
     break;
   case SDLK_ESCAPE:
-    breakoutRunner.setState(std::make_unique<PlayingState>());
+    if(withContinue) {
+      breakoutRunner.setState(std::make_unique<PlayingState>()); //TODO: Handle case were previous state was standby
+    } else {
+      breakoutRunner.exit();
+    }
     break;
   }
 }
+
+/**
+ * Standby State
+ */
+
+void StandByState::enter(BreakoutRunner &runner) {
+  runner.unfreeze();
+}
+
+void StandByState::update(BreakoutRunner &breakoutRunner) {
+  vector2 position = vector2(-100 , 100);
+  breakoutRunner.print(this->message, position);
+
+  breakoutRunner.syncBallWithPaddle();
+}
+
+void StandByState::onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) {
+  switch (key) {
+  case SDLK_LEFT:
+    case SDLK_A:
+    breakoutRunner.setPaddleVelocity(vector(-PADDLE_VELOCITY, 0, 0));
+    break;
+  case SDLK_RIGHT:
+    case SDLK_D:
+    breakoutRunner.setPaddleVelocity(vector(PADDLE_VELOCITY, 0, 0));
+    break;
+  }
+}
+
+
+void StandByState::onKeyUp(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) {
+  switch (key) {
+  case SDLK_SPACE:
+    breakoutRunner.playBall();
+    breakoutRunner.setState(std::make_unique<PlayingState>());
+    break;
+  case SDLK_ESCAPE:
+    breakoutRunner.setState(std::make_unique<MenuState>(true));
+    break;
+  case SDLK_LEFT:
+  case SDLK_A:
+  case SDLK_RIGHT:
+  case SDLK_D:
+    breakoutRunner.setPaddleVelocity(vector(0, 0, 0));
+    break;
+  }
+}
+
+/**
+ * Playing State
+ */
 
 void PlayingState::enter(BreakoutRunner &runner) {
   runner.unfreeze();
@@ -65,13 +127,13 @@ void PlayingState::onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, u
 void PlayingState::onKeyUp(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) {
   switch (key) {
   case SDLK_LEFT:
-    case SDLK_A:
-    case SDLK_RIGHT:
-    case SDLK_D:
+  case SDLK_A:
+  case SDLK_RIGHT:
+  case SDLK_D:
     breakoutRunner.setPaddleVelocity(vector(0, 0, 0));
     break;
   case SDLK_ESCAPE:
-    breakoutRunner.setState(std::make_unique<MenuState>());
+    breakoutRunner.setState(std::make_unique<MenuState>(true));
     break;
 
   }
