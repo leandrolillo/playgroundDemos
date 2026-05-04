@@ -18,3 +18,4 @@ TODO:
   - [ ] cuando pierde una vida y game over
   - [ ] música de fondo?
   
+- [ ] Merge to master and move on to something else.
