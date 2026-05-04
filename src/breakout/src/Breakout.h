@@ -87,6 +87,7 @@ public:
 class TransitioningState : public BreakoutState {
   String message;
   real timeout;
+  real elapsedTime=0;
   std::unique_ptr<BreakoutState> nextState;
 public:
   TransitioningState(const String &message, real timeout, std::unique_ptr<BreakoutState> nextState) : message(message), timeout(timeout), nextState(std::move(nextState)) {

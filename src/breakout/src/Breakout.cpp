@@ -57,7 +57,9 @@ void MenuState::onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsi
 
 void StandByState::enter(BreakoutRunner &runner) {
   runner.unfreeze();
+
   //TODO: disable ball so that physics manager skips it.
+  runner.setPaddleVelocity(vector(0, 0, 0));
 
   if(!this->levelName.empty()) {
     runner.setCurrentLevelName(this->levelName, this->forceLoad);
@@ -158,15 +160,22 @@ void PlayingState::onKeyUp(BreakoutRunner &breakoutRunner, unsigned int key, uns
 
 void TransitioningState::enter(BreakoutRunner &runner) {
   runner.freeze();
+  this->elapsedTime=0;
 }
 
 void TransitioningState::update(BreakoutRunner &breakoutRunner) {
+  elapsedTime += breakoutRunner.getStopWatch().getElapsedTime();
+  if(elapsedTime >= this->timeout) {
+    breakoutRunner.setState(std::move(this->nextState));
+  }
   vector2 position = vector2(-100 , 100);
   breakoutRunner.print(this->message, position);
 }
 
 void TransitioningState::onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) {
-  breakoutRunner.setState(std::move(this->nextState));
+  if(elapsedTime > 10 || elapsedTime > this->timeout) {
+    breakoutRunner.setState(std::move(this->nextState));
+  }
 }
 
 
