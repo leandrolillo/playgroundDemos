@@ -12,9 +12,9 @@ TODO:
 
 
 * Agregar sonidos: 
-  - [] rebote pelota en bloque según sea cambio de color, desaparece o bloque fijo
-  - [] rebote en paddle
-  - [] rebote en boundary y cuando se va la pelota
-  - [] cuando pierde una vida y game over
-  - [] música de fondo?
+  - [ ] rebote pelota en bloque según sea cambio de color, desaparece o bloque fijo
+  - [ ] rebote en paddle
+  - [ ] rebote en boundary y cuando se va la pelota
+  - [ ] cuando pierde una vida y game over
+  - [ ] música de fondo?
   
