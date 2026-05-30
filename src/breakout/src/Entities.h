@@ -1,3 +1,5 @@
+#pragma once
+
 #include "BreakoutLevel.h"
 #include "SpriteRenderer.h"
 
@@ -37,7 +39,16 @@ public:
   }
 
   void initialize() override {
-    sprite.setTexture((TextureResource *)resourceManager.load("background.png", MimeTypes::TEXTURE));
+    setTexture((TextureResource *)resourceManager.load("background.png", MimeTypes::TEXTURE));
+  }
+
+  Background &setTexture(const TextureResource *texture) {
+    sprite.setTexture(texture);
+    return *this;
+  }
+
+  const TextureResource *getTexture() const {
+    return this->sprite.getTexture();
   }
 
   void draw(SpriteRenderer &renderer) override {
@@ -90,6 +101,10 @@ public:
     renderer.draw(*texture, bottom.getTopLeft().xy(), bottom.getSize().xy(), 0);
     renderer.draw(*texture, left.getTopLeft().xy(), left.getSize().xy(), 0);
     renderer.draw(*texture, right.getTopLeft().xy(), right.getSize().xy(), 0);
+  }
+
+  void setOnBottomCollisionHandler(std::function<void(GeometryContact &contact)> onBottomCollisionHandler) {
+    bottom.setOnCollisionHandler(onBottomCollisionHandler);
   }
 };
 
@@ -167,6 +182,10 @@ public:
     texture = (TextureResource *)resourceManager.load("images/awesomeface.png", MimeTypes::TEXTURE);
   }
 
+  void setStatus(bool status) {
+    this->particle.setStatus(status);
+  }
+
   void draw(SpriteRenderer &renderer) override {
     Sphere &boundingSphere = (Sphere &)particle.getBoundingVolume();
 
@@ -181,7 +200,7 @@ class Brick: public Entity { //could be an object if added as particle instead o
 
   unsigned int i;
   unsigned int j;
-  unsigned int hitsLeft;
+  int hitsLeft;
   AABB &boundingBox;
 
   TextureResource *texture = null;
@@ -189,7 +208,7 @@ class Brick: public Entity { //could be an object if added as particle instead o
 
   inline static const auto brickColors = std::array {vector3(1.0, 0.0, 0.0), vector3(0.0, 1.0, 0.0), vector3(0.0, 0.0, 1.0), vector3(1.0, 1.0, 0.0), vector3(1.0, 0.0, 1.0), vector3(0.0, 1.0, 1.0)};
 public:
-  Brick(ResourceManager &resourceManager, ParticleManager &particleManager, unsigned int i, unsigned int j, unsigned int hitsLeft) :
+  Brick(ResourceManager &resourceManager, ParticleManager &particleManager, unsigned int i, unsigned int j, int hitsLeft) :
     Entity(resourceManager),
     particleManager(particleManager),
     boundingBox((AABB &)particleManager.addScenery(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 1, 1)))),
@@ -197,21 +216,26 @@ public:
 
     this->i = i;
     this->j = j;
-    boundingBox.setOnCollisionHandler([this](GeometryContact &contact) {
-      this->onCollision();
-    });
+//    boundingBox.setOnCollisionHandler([this](GeometryContact &contact) {
+//      this->onCollision();
+//    });
   }
+
+  void setOnCollisionHandler(std::function<void(GeometryContact &contact)> onCollisionHandler) {
+    boundingBox.setOnCollisionHandler(std::move(onCollisionHandler));
+  }
+
 
   void onCollision() {
     this->hitsLeft--;
-    this->setStatus(this->hitsLeft > 0);
+    this->setStatus(this->hitsLeft != 0);
   }
 
-  unsigned int getI() {
+  unsigned int getI() const {
     return this->i;
   }
 
-  unsigned int getJ() {
+  unsigned int getJ() const {
     return this->j;
   }
 
@@ -238,6 +262,7 @@ public:
   void initialize() override {
       texture = (TextureResource *)resourceManager.load("images/block.png", MimeTypes::TEXTURE);
       unbreakableTexture = (TextureResource *)resourceManager.load("images/block_solid.png", MimeTypes::TEXTURE);
+      boundingBox.setStatus(true);
     }
 
   void draw(SpriteRenderer &renderer) override {
@@ -252,6 +277,7 @@ public:
 };
 
 class Level: public Entity {
+  String name;
   unsigned int rows = 0;
   unsigned int columns = 0;
   real halfDepth;
@@ -259,12 +285,15 @@ class Level: public Entity {
   ParticleManager &particleManager;
 
   std::vector<std::unique_ptr<Brick>>bricks;
+  bool _isCompleted = false;
+  std::function<void()> onCompletedHandler;
 
 public:
-  Level(ResourceManager &resourceManager, ParticleManager &particleManager, real depth) :
+  Level(String name, ResourceManager &resourceManager, ParticleManager &particleManager, real depth) :
     Entity(resourceManager),
     particleManager(particleManager),
-    halfDepth(depth * 0.5)
+    halfDepth(depth * 0.5),
+    name(name)
   {
 
 
@@ -290,13 +319,18 @@ public:
   }
 
   void initialize() override {
+    load(name);
+  }
+
+  void load(String levelResourceName) {
     for(auto &brick : bricks) {
       particleManager.removeScenery(brick->getBoundingBox());
     }
     this->bricks.clear();
 
-    BreakoutLevel *levelDescription = (BreakoutLevel *)resourceManager.load("level-0.json", BreakoutLevel::MimeType);
+    BreakoutLevel *levelDescription = (BreakoutLevel *)resourceManager.load(levelResourceName, BreakoutLevel::MimeType);
     if(levelDescription) {
+      this->name = levelResourceName;
       this->rows = levelDescription->getRows();
       this->columns = levelDescription->getColumns();
 
@@ -304,7 +338,19 @@ public:
         for(unsigned int j = 0; j < levelDescription->getColumns(); j++) {
           if(levelDescription->getBrickAt(i, j) != 0) {
             this->bricks.push_back(std::make_unique<Brick>(resourceManager, particleManager, i, j, levelDescription->getBrickAt(i, j)));
-            this->bricks.back()->initialize();
+
+            Brick *brick = this->bricks.back().get();
+            brick->initialize();
+            brick->setOnCollisionHandler(
+                [this, brick=brick](GeometryContact &contact) { //Could not make this lambda work with unique_ptr<Brick>& (getting null on this captured parameter) - so fall back to raw pointer.
+                  brick->onCollision();
+
+                  this->_isCompleted = !std::any_of(this->bricks.begin(), this->bricks.end(), [](auto &innerBrick) { return innerBrick->getStatus(); });
+                  if(this->_isCompleted && this->onCompletedHandler) {
+                    this->onCompletedHandler();
+                  }
+                }
+            );
           }
         }
       }
@@ -317,5 +363,15 @@ public:
     }
   }
 
-};
+  bool isCompleted() const {
+    return this->_isCompleted;
+  }
 
+  void setOnCompletedHandler(std::function<void()> onCompleteHandler) {
+    this->onCompletedHandler = std::move(onCompleteHandler);
+  }
+
+  const String &getName() const {
+    return this->name;
+  }
+};

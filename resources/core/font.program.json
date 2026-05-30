@@ -1,0 +1,4 @@
+{
+	"vertexShaders": ["font.vertexShader.glsl"],
+	"fragmentShaders": ["font.fragmentShader.glsl"]
+}

@@ -20,11 +20,11 @@ public:
     return bricks.getNroColumnas();
   }
 
-  void setBrick(unsigned int row, unsigned int column, unsigned int health) {
+  void setBrick(unsigned int row, unsigned int column, int health) {
     bricks(row, column) = health;
   }
 
-  unsigned int getBrickAt(unsigned int row, unsigned int column) const {
+  int getBrickAt(unsigned int row, unsigned int column) const {
     return bricks(row, column);
   }
 };

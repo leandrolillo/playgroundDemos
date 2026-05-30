@@ -1,163 +1,183 @@
-#include "../../base/BaseDemo.h"
-#include "PhysicsRunner.h"
-#include "GeometryRenderer.h"
-#include<random>
+#include "Breakout.h"
 
-#include "Entities.h"
-#include "BreakoutLevelAdapter.h"
-#include "SpriteRenderer.h"
+/**************
+ * Menu State *
+ **************/
+void MenuState::enter(BreakoutRunner &runner) {
+  runner.freeze();
+}
 
-constexpr real zMin = -1;
-constexpr real zMax = 1;
+void MenuState::update(BreakoutRunner &breakoutRunner) {
+//  vector2 position = vector2(
+//      (breakoutRunner.getVideo().getScreenWidth() - 100) / 2,
+//      (breakoutRunner.getVideo().getScreenHeight() - 100) / 2);
 
-static std::mt19937 mtRNE(std::chrono::system_clock::now().time_since_epoch().count()); //random number engine
+  vector2 position = vector2(-100 , 100); //TODO: review SpriteRenderer & TextRenderer coordinate frames
 
-constexpr real DEPTH = 10;
-
-//TODO: move this to levels
-constexpr real BALL_VELOCITY = 500; //pixels per second
-constexpr real PADDLE_VELOCITY = 300.0; //pixels per second
-constexpr real PADDLE_WIDTH = 60;
-constexpr real PADDLE_HEIGHT = 10;
-
-class BreakoutRunner: public BaseDemoRunner {
-  //GeometryRenderer geometryRenderer { defaultRenderer };
-  SpriteRenderer spriteRenderer { video };
-
-  PhysicsRunner *physics {(PhysicsRunner*) this->getContainer().getRequiredRunner(PhysicsRunner::ID)};
-
-  LightResource light{ vector(0, 0, 0), vector(1, 1, 1), vector(1, 1, 1), vector(1, 1, 1), 1.0f };
-
-  Background background { resourceManager };
-  Border border { resourceManager, physics->getParticleManager(), DEPTH};
-  Paddle paddle { resourceManager, physics->getParticleManager(), PADDLE_WIDTH, PADDLE_HEIGHT, DEPTH};
-  Ball ball { resourceManager, physics->getParticleManager(), 10 };
-  Level level { resourceManager, physics->getParticleManager(), DEPTH};
-
-public:
-  using BaseDemoRunner::BaseDemoRunner; //inherit constructors
-
-  virtual void beforeLoop() override { //use sprite renderer instead
-    spriteRenderer.clear();
-  }
-
-  virtual void afterLoop() override {
-    spriteRenderer.render(camera);
-  }
-
-
-  bool initialize() override {
-    if (!BaseDemoRunner::initialize()) {
-      return false;
+  for (int index = 0; index < options.size(); index++) {
+    if (index == currentSelection) {
+      breakoutRunner.print(">", position - vector2(30, 0));
     }
-
-    video.enable(VideoAttribute::RELATIVE_MOUSE_MODE);
-
-    this->getResourceManager().addAdapter<BreakoutLevelAdapter>();
-
-    ParticleManager &particleManager = physics->getParticleManager();
-    particleManager.getCollisionDetector().setRestitution(1.0);
-
-    background.initialize();
-    border.initialize();
-    paddle.initialize();
-    ball.initialize();
-    level.initialize();
-
-    reset();
-
-    return true;
+    breakoutRunner.print(options[index], position);
+    position.y -= 40;
   }
+}
 
-  virtual void onResize(unsigned int width, unsigned int height) override {
-    //camera.setOrthographicProjection(0, 0, width, height, zMin, zMax);
-    //camera.setOrthographicProjection(width * -0.5, height * -0.5, width * 0.5, height * 0.5, zMin, zMax);
-    camera.setOrthographicProjection(width, height, zMin, zMax);
-
-    background.onScreenResize(width, height);
-    border.onScreenResize(width, height);
-    ball.onScreenResize(width, height);
-    paddle.onScreenResize(width, height);
-    level.onScreenResize(width, height);
-  }
-
-  std::uniform_real_distribution<real> directionDistribution {10, 170};
-  std::uniform_real_distribution<real> speedDistribution {-100, 100};
-
-  bool reset() {
-    camera.setPosition(vector(0, 0, 0));
-
-    real direction = directionDistribution(mtRNE);
-    real speed = BALL_VELOCITY + speedDistribution(mtRNE);
-
-    //logger->info("Ball random values - angle [%.2f], module [%.2f]", angulo, modulo);
-    real ballY = paddle.getPosition().y + paddle.getSize().y * 0.5 + ball.getRadius();
-    ball.setPosition(vector(0, ballY, 0));
-    ball.setVelocity(vector(speed * cos(radian(direction)), speed * sin(radian(direction)), 0));
-
-    paddle.setPosition(vector(0, paddle.getPosition().y, 0));
-    paddle.setVelocity(vector(0, 0, 0));
-  }
-
-
-
-  LoopResult doLoop() override {
-    background.draw(spriteRenderer);
-    border.draw(spriteRenderer);
-    level.draw(spriteRenderer);
-    ball.draw(spriteRenderer);
-    paddle.draw(spriteRenderer);
-
-
-    return LoopResult::CONTINUE;
-  }
-
-  virtual void onMouseWheel(int wheel) override {
-    logger->info("Camera before: [%s]", camera.toString().c_str());
-    vector position = camera.getPosition() - vector(0.0, 0.0, std::min(1.0, 0.1 * wheel));
-    position.z = std::max(zMin + 1, std::min(zMax - 1, position.z));
-    camera.setPosition(position);
-    logger->info("[%s]", camera.toString().c_str());
-  }
-
-  virtual void onMouseMove(int x, int y, int dx, int dy, unsigned int buttons) override {
-    if (dx != 0 || dy != 0) {
-      camera.setPosition(camera.getPosition() + vector(dx, dy, 0));
+void MenuState::onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) {
+  switch (key) {
+  case SDLK_UP:
+    currentSelection = (currentSelection - 1 + options.size()) % options.size();
+    break;
+  case SDLK_DOWN:
+    currentSelection = (currentSelection + 1) % options.size();
+    break;
+  case SDLK_RETURN:
+    if (options[currentSelection] == "New Game") {
+      //breakoutRunner.reset();
+      breakoutRunner.setState(std::make_unique<StandByState>(breakoutRunner.getLevelNames()[0], true));
+    } else if (options[currentSelection] == "Continue") {
+      breakoutRunner.setState(std::make_unique<PlayingState>()); //TODO: Handle case were previous state was standby
+    } else {
+      breakoutRunner.exit();
     }
-  }
-
-  virtual void onKeyUp(unsigned int key, unsigned int keyModifier) override {
-    switch (key) {
-      case SDLK_LEFT:
-      case SDLK_A:
-      case SDLK_RIGHT:
-      case SDLK_D:
-        paddle.setVelocity(vector(0, 0, 0));
-        break;
+    break;
+  case SDLK_ESCAPE:
+    if(withContinue) {
+      breakoutRunner.setState(std::make_unique<PlayingState>()); //TODO: Handle case were previous state was standby
+    } else {
+      breakoutRunner.exit();
     }
+    break;
   }
+}
 
-  virtual void onKeyDown(unsigned int key, unsigned int keyModifier) override {
-    switch (key) {
-      case SDLK_LEFT:
-      case SDLK_A:
-        paddle.setVelocity(vector(-PADDLE_VELOCITY, 0, 0));
-        break;
-      case SDLK_RIGHT:
-      case SDLK_D:
-        paddle.setVelocity(vector(PADDLE_VELOCITY, 0, 0));
-        break;
+/*****************
+ * Standby State *
+ *****************/
 
-      case SDLK_SPACE:
-        physics->setEnabled(!physics->getEnabled());
-        break;
+void StandByState::enter(BreakoutRunner &runner) {
+  runner.unfreeze();
 
-      case SDLK_BACKSPACE:
-        reset();
-        break;
-    }
+  //TODO: disable ball so that physics manager skips it.
+  runner.setPaddleVelocity(vector(0, 0, 0));
+
+  if(!this->levelName.empty()) {
+    runner.setCurrentLevelName(this->levelName, this->forceLoad);
   }
-};
+}
+
+void StandByState::update(BreakoutRunner &breakoutRunner) {
+  vector2 position = vector2(-100 , 100);
+
+  String message = this->levelName; //remove .json from message
+
+  auto lastIndex = message.rfind(".");
+  if(lastIndex != String::npos) {
+    message.erase(lastIndex);
+  }
+  std::replace(message.begin(), message.end(), '-', ' ');
+
+  breakoutRunner.print(message, position);
+
+  breakoutRunner.syncBallWithPaddle();
+}
+
+void StandByState::onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) {
+  switch (key) {
+  case SDLK_LEFT:
+    case SDLK_A:
+    breakoutRunner.setPaddleVelocity(vector(-PADDLE_VELOCITY, 0, 0));
+    break;
+  case SDLK_RIGHT:
+    case SDLK_D:
+    breakoutRunner.setPaddleVelocity(vector(PADDLE_VELOCITY, 0, 0));
+    break;
+  }
+}
+
+
+void StandByState::onKeyUp(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) {
+  switch (key) {
+  case SDLK_SPACE:
+    breakoutRunner.playBall();
+    breakoutRunner.setState(std::make_unique<PlayingState>());
+    break;
+  case SDLK_ESCAPE:
+    breakoutRunner.setState(std::make_unique<MenuState>(true));
+    break;
+  case SDLK_LEFT:
+  case SDLK_A:
+  case SDLK_RIGHT:
+  case SDLK_D:
+    breakoutRunner.setPaddleVelocity(vector(0, 0, 0));
+    break;
+  }
+}
+
+/*****************
+ * Playing State *
+ *****************/
+
+void PlayingState::enter(BreakoutRunner &runner) {
+  runner.unfreeze();
+}
+
+void PlayingState::onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) {
+  switch (key) {
+  case SDLK_LEFT:
+    case SDLK_A:
+    breakoutRunner.setPaddleVelocity(vector(-PADDLE_VELOCITY, 0, 0));
+    break;
+  case SDLK_RIGHT:
+    case SDLK_D:
+    breakoutRunner.setPaddleVelocity(vector(PADDLE_VELOCITY, 0, 0));
+    break;
+//    case SDLK_BACKSPACE:
+//      breakoutRunner.reset();
+//      break;
+  }
+}
+
+void PlayingState::onKeyUp(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) {
+  switch (key) {
+  case SDLK_LEFT:
+  case SDLK_A:
+  case SDLK_RIGHT:
+  case SDLK_D:
+    breakoutRunner.setPaddleVelocity(vector(0, 0, 0));
+    break;
+  case SDLK_ESCAPE:
+    breakoutRunner.setState(std::make_unique<MenuState>(true));
+    break;
+
+  }
+}
+
+
+/*****************
+ * Transitioning State *
+ *****************/
+
+void TransitioningState::enter(BreakoutRunner &runner) {
+  runner.freeze();
+  this->elapsedTime=0;
+}
+
+void TransitioningState::update(BreakoutRunner &breakoutRunner) {
+  elapsedTime += breakoutRunner.getStopWatch().getElapsedTime();
+  if(elapsedTime >= this->timeout) {
+    breakoutRunner.setState(std::move(this->nextState));
+  }
+  vector2 position = vector2(-100 , 100);
+  breakoutRunner.print(this->message, position);
+}
+
+void TransitioningState::onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) {
+  if(elapsedTime > 10 || elapsedTime > this->timeout) {
+    breakoutRunner.setState(std::move(this->nextState));
+  }
+}
+
 
 class Breakout: public Playground {
 public:
