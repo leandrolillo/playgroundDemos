@@ -1,7 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
-// Pre-include system headers to satisfy missing includes in upstream library headers
+// Pre-include system headers to satisfy missing includes in the fetched
+// dependency headers (math, playground) that were developed on macOS and are
+// missing these on Linux/GCC.
 #include <stdexcept>
 #include <cstring>
 #include <memory>
@@ -281,9 +283,9 @@ TEST_CASE("vector3: dot product", "[math][vector3]")
 
 TEST_CASE("vector3: cross product", "[math][vector3]")
 {
-    SECTION("x cross y gives negative z (left-handed convention)") {
-        // The implementation uses (a.z*b.y-a.y*b.z, a.x*b.z-a.z*b.x, a.y*b.x-a.x*b.y),
-        // which is the negation of the standard right-hand formula, giving a left-handed result.
+    SECTION("x cross y gives negative z (non-standard left-handed convention)") {
+        // WARNING: productoVectorial uses the formula (a.z*b.y-a.y*b.z, a.x*b.z-a.z*b.x, a.y*b.x-a.x*b.y),
+        // which is the negation of the standard right-hand cross product. Callers must account for this sign flip.
         vector3 x(1.0f, 0.0f, 0.0f);
         vector3 y(0.0f, 1.0f, 0.0f);
         vector3 r = x ^ y;
@@ -292,7 +294,7 @@ TEST_CASE("vector3: cross product", "[math][vector3]")
         REQUIRE(r.z == Approx(-1.0f));
     }
 
-    SECTION("y cross x gives positive z (left-handed convention)") {
+    SECTION("y cross x gives positive z (non-standard left-handed convention)") {
         vector3 x(1.0f, 0.0f, 0.0f);
         vector3 y(0.0f, 1.0f, 0.0f);
         vector3 r = y ^ x;
@@ -628,9 +630,9 @@ TEST_CASE("StringUtils: split", "[utils][string]")
         REQUIRE(parts[0] == "abc");
     }
 
-    SECTION("Trailing separator: no empty last token (std::getline behaviour)") {
-        // std::getline does not emit an empty trailing token when the string ends
-        // with the delimiter and the next read immediately hits EOF.
+    SECTION("Trailing separator: no empty last token") {
+        // StringUtils::split uses std::getline internally; a trailing delimiter
+        // does not produce a spurious empty final token.
         auto parts = StringUtils::split("a/b/", '/');
         REQUIRE(parts.size() == 2u);
         REQUIRE(parts[0] == "a");
