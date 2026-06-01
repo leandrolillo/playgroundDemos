@@ -29,7 +29,7 @@ public:
       return false;
     }
 
-    //video->enable(CULL_FACE, GL_NONE);
+    video->enable(CULL_FACE, GL_NONE);
 
     /*
      * There are the following scenarios:
