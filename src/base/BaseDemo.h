@@ -56,11 +56,8 @@ protected:
   }
 
   virtual bool initialize() override {
-    constexpr unsigned int initialWidth = 800;
-    constexpr unsigned int initialHeight = 600;
-    this->video.resize(initialWidth, initialHeight);
-    this->onResize(initialWidth, initialHeight);
-
+    this->video.resize(800, 600);
+    
     camera.setViewMatrix(matriz_4x4::traslacion(vector(0.0f, -0.5f, -10.0f)));
 
     //logger->debug("Setting up video %d", video);
