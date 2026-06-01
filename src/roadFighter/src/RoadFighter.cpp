@@ -85,8 +85,6 @@ public:
   LoopResult doLoop() override {
 //        defaultRenderer.drawAxes(matriz_4x4::identidad);
 
-    defaultRenderer.drawObject(matrix_4x4::identidad, carVertexArray);
-    defaultRenderer.drawObject(matrix_4x4::identidad, axesVertexArray);
     defaultRenderer.drawObject(matrix_4x4::identidad, axesMesh);
     defaultRenderer.drawObject(matrix_4x4::traslacion(0, 4, -3),
         texturedBoxMesh);
