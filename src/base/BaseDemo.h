@@ -58,8 +58,11 @@ protected:
   virtual bool initialize() override {
     constexpr unsigned int width = 800;
     constexpr unsigned int height = 600;
+    constexpr double defaultFovDegrees = 45.0;
+    constexpr double nearPlane = 2.0;
+    constexpr double farPlane = 300.0;
     this->video.resize(width, height);
-    camera.setPerspectiveProjectionFov(45.0, (double) width / (double) height, 2, 300.0);
+    camera.setPerspectiveProjectionFov(defaultFovDegrees, (double) width / (double) height, nearPlane, farPlane);
     
     camera.setViewMatrix(matriz_4x4::traslacion(vector(0.0f, -0.5f, -10.0f)));
 
