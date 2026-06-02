@@ -2,7 +2,7 @@ FetchContent_Declare(
     playground
     GIT_REPOSITORY https://github.com/leandrolillo/playground.git
     GIT_TAG ${PLAYGROUND_VERSION}
-    GIT_SHALLOW TRUE)
+    GIT_SHALLOW FALSE)
 FetchContent_MakeAvailable(playground)
 
 add_subdirectory(general)
