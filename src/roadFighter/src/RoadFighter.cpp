@@ -28,6 +28,7 @@ public:
     if (!BaseDemoRunner::initialize()) {
       return false;
     }
+    defaultRenderer.disableBlending();
 
     //video.enable(VideoAttribute::CULL_FACE, VideoAttribute::NONE);
 
