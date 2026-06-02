@@ -81,8 +81,7 @@ public:
       logger->info("Loaded Axes");
     }
 
-    backgroundMusic = this->audio.createSource("background.ogg",
-        vector(0, 0, 0), vector(0, 0, 0), true);
+    backgroundMusic = this->audio.createSource("background.ogg", vector(0, 0, 0), vector(0, 0, 0), true);
     audio.playSource(backgroundMusic);
 
     return true;
@@ -111,47 +110,8 @@ public:
     }
 
   }
-//
-//    void onMouseButtonUp(unsigned char button, int x, int y) override {
-//    }
-//
-//	void onMouseWheel(int wheel) override {
-//		logger->info("Mouse wheel %d", wheel);
-//	    camera.setPosition(camera.getPosition() - vector(0.0, 0.0, std::min(1.0, 0.1 * wheel)));
-//	    logger->info("Camera position: %s", camera.getPosition().toString().c_str());
-//	}
-//
-//
   void onMouseButtonDown(unsigned char button, int x, int y) override {
   }
-//
-//    void onKeyDown(unsigned int key, unsigned int keyModifier) override {
-//        switch (key) {
-//			case '+':
-//				camera.setPosition(camera.getPosition() - vector(0.0, 0.0, 0.1));
-//			break;
-//			case '-':
-//				camera.setPosition(camera.getPosition() + vector(0.0, 0.0, 0.1));
-//			break;
-//			case SDLK_LEFT:
-//				camera.setPosition(camera.getPosition() - vector(0.1, 0.0, 0.0));
-//			break;
-//			case SDLK_RIGHT:
-//				camera.setPosition(camera.getPosition() + vector(0.1, 0.0, 0.0));
-//			break;
-//        	case SDLK_UP:
-//        		camera.setPosition(camera.getPosition() + vector(0.0, 0.1, 0.0));
-//        	break;
-//        	case SDLK_DOWN:
-//        		camera.setPosition(camera.getPosition() - vector(0.0, 0.1, 0.0));
-//        		break;
-//            case SDLK_BACKSPACE:
-//                reset();
-//                break;
-//            case SDLK_SPACE:
-//                break;
-//        }
-//    }
 };
 
 class RoadFighter: public Playground {
