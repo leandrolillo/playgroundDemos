@@ -29,7 +29,7 @@ public:
       return false;
     }
 
-    //video->enable(CULL_FACE, GL_NONE);
+    //video.enable(VideoAttribute::CULL_FACE, VideoAttribute::NONE);
 
     /*
      * There are the following scenarios:
@@ -61,18 +61,24 @@ public:
         std::set<String> { }, std::map<String, String> { { "texture-filter", "nearest" } })) == null) {
       logger->error("Could not load car mesh");
       return false;
+    } else {
+      logger->info("Loaded car Mesh");
     }
 
     if ((texturedBoxMesh = (MeshResource*) this->getResourceManager().load("texturedCube.obj/Cube", MimeTypes::MESH,
         std::set<String> { }, std::map<String, String> { { "texture-filter", "nearest" } })) == null) {
       logger->error("Could not load textured box mesh");
       return false;
+    } else {
+      logger->info("Loaded car Box Mesh");
     }
 
     if ((axesMesh = (MeshResource*) this->getResourceManager().load("axes.obj/Axes", MimeTypes::MESH,
         std::set<String> { }, std::map<String, String> { { "texture-filter", "nearest" } })) == null) {
       logger->error("Could not load axes model");
       return false;
+    } else {
+      logger->info("Loaded Axes");
     }
 
     backgroundMusic = this->audio.createSource("background.ogg",
@@ -88,8 +94,7 @@ public:
     defaultRenderer.drawObject(matrix_4x4::identidad, carVertexArray);
     defaultRenderer.drawObject(matrix_4x4::identidad, axesVertexArray);
     defaultRenderer.drawObject(matrix_4x4::identidad, axesMesh);
-    defaultRenderer.drawObject(matrix_4x4::traslacion(0, 4, -3),
-        texturedBoxMesh);
+    defaultRenderer.drawObject(matrix_4x4::traslacion(0, 4, -3), texturedBoxMesh);
     defaultRenderer.drawObject(matrix_4x4::traslacion(0, 0, -3), carMesh);
 
     return LoopResult::CONTINUE;
