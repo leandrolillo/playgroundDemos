@@ -42,9 +42,9 @@ public:
  * - Menu
  *    - welcome (new game / exit). No "continue" option. Escape exits the game. New game -> standby at level 0
  *    - paused (similar to welcome but with additional continue option). Continue (or ESC key) go back to previous {playing or standby}
- * - standby (ball is on paddle, label with current level)
- * - playing (playing ball)
- * - transitioning state (display message, timeout based, with pointer to next state)
+ * - standby (ball is on paddle, label with current level. Can move paddle with arrows. Can launch ball with space)
+ * - playing (playing ball. Escape goes to menu)
+ * - transitioning state (display message, timeout based, with pointer to next state. Any key to continue)
  */
 class MenuState : public BreakoutState {
   int currentSelection = 0;
