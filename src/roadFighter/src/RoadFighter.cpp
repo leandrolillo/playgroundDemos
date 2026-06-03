@@ -28,8 +28,9 @@ public:
     if (!BaseDemoRunner::initialize()) {
       return false;
     }
+    defaultRenderer.disableBlending();
 
-    //video->enable(CULL_FACE, GL_NONE);
+    //video.enable(VideoAttribute::CULL_FACE, VideoAttribute::NONE);
 
     /*
      * There are the following scenarios:
@@ -61,22 +62,27 @@ public:
         std::set<String> { }, std::map<String, String> { { "texture-filter", "nearest" } })) == null) {
       logger->error("Could not load car mesh");
       return false;
+    } else {
+      logger->info("Loaded car Mesh");
     }
 
     if ((texturedBoxMesh = (MeshResource*) this->getResourceManager().load("texturedCube.obj/Cube", MimeTypes::MESH,
         std::set<String> { }, std::map<String, String> { { "texture-filter", "nearest" } })) == null) {
       logger->error("Could not load textured box mesh");
       return false;
+    } else {
+      logger->info("Loaded car Box Mesh");
     }
 
     if ((axesMesh = (MeshResource*) this->getResourceManager().load("axes.obj/Axes", MimeTypes::MESH,
         std::set<String> { }, std::map<String, String> { { "texture-filter", "nearest" } })) == null) {
       logger->error("Could not load axes model");
       return false;
+    } else {
+      logger->info("Loaded Axes");
     }
 
-    backgroundMusic = this->audio.createSource("background.ogg",
-        vector(0, 0, 0), vector(0, 0, 0), true);
+    backgroundMusic = this->audio.createSource("background.ogg", vector(0, 0, 0), vector(0, 0, 0), true);
     audio.playSource(backgroundMusic);
 
     return true;
@@ -88,8 +94,7 @@ public:
     defaultRenderer.drawObject(matrix_4x4::identidad, carVertexArray);
     defaultRenderer.drawObject(matrix_4x4::identidad, axesVertexArray);
     defaultRenderer.drawObject(matrix_4x4::identidad, axesMesh);
-    defaultRenderer.drawObject(matrix_4x4::traslacion(0, 4, -3),
-        texturedBoxMesh);
+    defaultRenderer.drawObject(matrix_4x4::traslacion(0, 4, -3), texturedBoxMesh);
     defaultRenderer.drawObject(matrix_4x4::traslacion(0, 0, -3), carMesh);
 
     return LoopResult::CONTINUE;
@@ -106,47 +111,8 @@ public:
     }
 
   }
-//
-//    void onMouseButtonUp(unsigned char button, int x, int y) override {
-//    }
-//
-//	void onMouseWheel(int wheel) override {
-//		logger->info("Mouse wheel %d", wheel);
-//	    camera.setPosition(camera.getPosition() - vector(0.0, 0.0, std::min(1.0, 0.1 * wheel)));
-//	    logger->info("Camera position: %s", camera.getPosition().toString().c_str());
-//	}
-//
-//
   void onMouseButtonDown(unsigned char button, int x, int y) override {
   }
-//
-//    void onKeyDown(unsigned int key, unsigned int keyModifier) override {
-//        switch (key) {
-//			case '+':
-//				camera.setPosition(camera.getPosition() - vector(0.0, 0.0, 0.1));
-//			break;
-//			case '-':
-//				camera.setPosition(camera.getPosition() + vector(0.0, 0.0, 0.1));
-//			break;
-//			case SDLK_LEFT:
-//				camera.setPosition(camera.getPosition() - vector(0.1, 0.0, 0.0));
-//			break;
-//			case SDLK_RIGHT:
-//				camera.setPosition(camera.getPosition() + vector(0.1, 0.0, 0.0));
-//			break;
-//        	case SDLK_UP:
-//        		camera.setPosition(camera.getPosition() + vector(0.0, 0.1, 0.0));
-//        	break;
-//        	case SDLK_DOWN:
-//        		camera.setPosition(camera.getPosition() - vector(0.0, 0.1, 0.0));
-//        		break;
-//            case SDLK_BACKSPACE:
-//                reset();
-//                break;
-//            case SDLK_SPACE:
-//                break;
-//        }
-//    }
 };
 
 class RoadFighter: public Playground {

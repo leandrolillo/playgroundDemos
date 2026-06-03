@@ -173,7 +173,7 @@ void TransitioningState::update(BreakoutRunner &breakoutRunner) {
 }
 
 void TransitioningState::onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) {
-  if(elapsedTime > 10 || elapsedTime > this->timeout) {
+  if(elapsedTime > 1 || elapsedTime > this->timeout) {
     breakoutRunner.setState(std::move(this->nextState));
   }
 }
