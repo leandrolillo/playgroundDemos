@@ -1,6 +1,7 @@
 #include "../../base/BaseDemo.h"
-#include "GeometryRenderer.h"
-#include "CollisionTester.h"
+#include <OpenALRunner.h>
+#include <GeometryRenderer.h>
+#include <CollisionTester.h>
 
 constexpr real zMin = -100;
 constexpr real zMax = 100;
@@ -240,7 +241,7 @@ public:
   void initializePlayground() override {
     Playground::initializePlayground();
     this->addRunner<OpenGLRunner>();
-    this->addRunner<AudioRunner>();
+    this->addRunner<OpenALRunner>();
     this->addRunner<MinkowskiDifferenceRunner>();
   }
 };

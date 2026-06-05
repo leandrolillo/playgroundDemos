@@ -4,6 +4,7 @@
 #include <cassert>
 
 #include "../../base/BaseDemo.h"
+#include "OpenALRunner.h"
 #include "PhysicsRunner.h"
 #include "GeometryRenderer.h"
 

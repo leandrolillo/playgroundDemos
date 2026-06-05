@@ -6,7 +6,7 @@
  */
 #include<Playground.h>
 #include<OpenGLRunner.h>
-#include<AudioRunner.h>
+#include<OpenALRunner.h>
 
 #include<vector>
 
@@ -20,7 +20,7 @@ private:
   vector *currentPosition = &viewPosition;
   real rotation = 0;
 
-  Source *lightAnnoyingSoundSource = null;
+  AudioSource *lightAnnoyingSoundSource = null;
 
   TextureResource *pngTexture = null;
   TextureResource *pngTexture2 = null;
@@ -51,7 +51,7 @@ private:
 
     // demo stuff
     lightAnnoyingSoundSource = audio.createSource("audio/voltage.wav");
-    audio.playSource(lightAnnoyingSoundSource);
+    audio.playSource(*lightAnnoyingSoundSource);
 
     pngTexture = (TextureResource*) getResourceManager().load("images/TEXTURA.PNG", MimeTypes::TEXTURE);
     pngTexture2 = (TextureResource*) getResourceManager().load("images/CEDFENCE.PNG", MimeTypes::TEXTURE);
@@ -81,7 +81,7 @@ private:
     if (lightAnnoyingSoundSource != null) {
       lightAnnoyingSoundSource->setPosition(
           vector3(lightPosition.x, lightPosition.y, -lightPosition.z));
-      audio.updateSource(lightAnnoyingSoundSource);
+      audio.updateSource(*lightAnnoyingSoundSource);
       audio.updateListener(viewPosition);
     }
 
@@ -181,7 +181,7 @@ public:
   void initializePlayground() override {
     Playground::initializePlayground();
     this->addRunner<OpenGLRunner>();
-    this->addRunner<AudioRunner>();
+    this->addRunner<OpenALRunner>();
     this->addRunner<GeneralDemoRunner>();
   }
 };

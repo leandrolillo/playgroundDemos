@@ -7,6 +7,8 @@
 
 #include "../../base/BaseDemo.h"
 #include<PhysicsRunner.h>
+#include<OpenGLRunner.h>
+#include<OpenALRunner.h>
 
 #include<vector>
 
@@ -128,7 +130,7 @@ public:
     /**
      * perspective projection zFar needs to be at least the size of skybox hypotenuse (sqrt(skybox size^2 + skybox size^2)
      */
-    camera.setPerspectiveProjectionFov(45.0, (GLfloat) width / (GLfloat) height, 0.1, 600.0);
+    camera.setPerspectiveProjectionFov(45.0, (real) width / (real) height, 0.1, 600.0);
   }
 
   virtual bool initialize() override {
@@ -363,7 +365,7 @@ public:
   void initializePlayground() override {
     Playground::initializePlayground();
     this->addRunner<OpenGLRunner>();
-    this->addRunner<AudioRunner>();
+    this->addRunner<OpenALRunner>();
     this->addRunner<PhysicsRunner>();
     this->addRunner<TerrainDemoRunner>();
   }
