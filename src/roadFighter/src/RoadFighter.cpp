@@ -20,7 +20,7 @@ class RoadFighterRunner: public BaseDemoRunner {
   VertexArrayResource *axesVertexArray = null;
 //	TextureResource *texture = null;
 
-  AudioSource *backgroundMusic = null;
+  std::unique_ptr<AudioSource> backgroundMusic;
 
 public:
   using BaseDemoRunner::BaseDemoRunner; //inherit constructors
@@ -84,7 +84,7 @@ public:
     }
 
     backgroundMusic = this->audio.createSource("background.ogg", vector(0, 0, 0), vector(0, 0, 0), true);
-    audio.playSource(*backgroundMusic);
+    backgroundMusic->play();
 
     return true;
   }

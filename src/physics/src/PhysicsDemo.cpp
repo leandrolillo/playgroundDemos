@@ -48,8 +48,8 @@ class PhysicsDemoRunner: public BaseDemoRunner {
   /**
    * This demo stuff
    */
-  AudioSource *gunshotSource = null;
-  AudioSource *bounceSource = null;
+  std::unique_ptr<AudioSource> gunshotSource;
+  std::unique_ptr<AudioSource> bounceSource;
 
   //Plane ground = Plane(vector(0, 0, 0), vector(0, 1, 0));
   Particle *spherePlatform = null;
@@ -237,8 +237,7 @@ class PhysicsDemoRunner: public BaseDemoRunner {
     if (contact.getRelativeSpeed() < -0.5) {
       //logger->info("Collision relative speed: %f - sound on", contact.getRelativeSpeed());
       bounceSource->setPosition(bulletParticle->getPosition());
-      audio.updateSource(*bounceSource);
-      audio.playSource(*bounceSource);
+      bounceSource->play();
     }
   }
 
@@ -275,8 +274,7 @@ class PhysicsDemoRunner: public BaseDemoRunner {
       bullet->setStatus(true);
 
       gunshotSource->setPosition(position);
-      audio.updateSource(*gunshotSource);
-      audio.playSource(*gunshotSource);
+      gunshotSource->play();
 
       //logger->info("bullet at position: %s", bullet->getPosition().toString("%.2f").c_str());
 
