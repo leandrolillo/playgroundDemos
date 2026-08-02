@@ -4,4 +4,4 @@ target_include_directories(${MODULE_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/
 
 target_sources(${MODULE_NAME} PUBLIC GeneralDemo.cpp)
 
-target_link_libraries(${MODULE_NAME} playground openGLRunner audioRunner)
+target_link_libraries(${MODULE_NAME} playground openGLRunner openALRunner)

@@ -16,4 +16,4 @@ add_custom_command(
             "${CMAKE_BINARY_DIR}/${MODULE_NAME}/resources")
 
 
-target_link_libraries(${MODULE_NAME} playground openGLRunner audioRunner physicsRunner)
+target_link_libraries(${MODULE_NAME} playground openGLRunner openALRunner physicsRunner)

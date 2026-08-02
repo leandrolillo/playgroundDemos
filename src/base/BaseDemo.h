@@ -21,7 +21,7 @@ class BaseDemoRunner: public PlaygroundRunner {
 protected:
   Logger *logger = LoggerFactory::getLogger(typeid(*this).name());
   VideoRunner &video;
-  AudioRunner &audio;
+  AudioRunner &audio; //TODO: maybe split this into videoDemoRunner and AudioVideoDemoRunner so that we don't force including openalRunner in all playgrounds?
 
   DefaultRenderer defaultRenderer;
 
@@ -47,12 +47,12 @@ protected:
     return this->video;
   }
 
-  AudioRunner getAudio() {
+  AudioRunner &getAudio() {
     return this->audio;
   }
 
   virtual void onResize(unsigned int width, unsigned int height) override {
-    camera.setPerspectiveProjectionFov(45.0, (double) width / (double) height, 2, 300.0);
+    camera.setPerspectiveProjectionFov(45.0, (real) width / (real) height, 2, 300.0);
   }
 
   virtual bool initialize() override {
@@ -86,6 +86,7 @@ protected:
     logger->info("Camera position: %s", camera.getPosition().toString().c_str());
   }
 
+  //TODO: Remove SDL Macros and include videoRunner.h instead of OpenGLRunner.h
   virtual void onKeyDown(unsigned int key, unsigned int keyModifier) override {
     switch (key) {
     case '+':

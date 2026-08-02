@@ -9,7 +9,7 @@
 
 #define GL_SILENCE_DEPRECATION
 #include <OpenGLRunner.h>
-#include <AudioRunner.h>
+#include <OpenALRunner.h>
 #include<SkyboxRenderer.h>
 #include<GridRenderer.h>
 
@@ -294,7 +294,7 @@ public:
   void initializePlayground() override {
       Playground::initializePlayground();
       this->addRunner<OpenGLRunner>();
-      this->addRunner<AudioRunner>();
+      this->addRunner<OpenALRunner>();
       this->addRunner<CollisionDetectionDemoRunner>();
   }
 };

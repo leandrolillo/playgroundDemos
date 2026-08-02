@@ -6,7 +6,7 @@
  */
 #include<Playground.h>
 #include<OpenGLRunner.h>
-#include<AudioRunner.h>
+#include<OpenALRunner.h>
 
 #include<vector>
 
@@ -20,7 +20,7 @@ private:
   vector *currentPosition = &viewPosition;
   real rotation = 0;
 
-  Source *lightAnnoyingSoundSource = null;
+  std::unique_ptr<AudioSource> lightAnnoyingSoundSource;
 
   TextureResource *pngTexture = null;
   TextureResource *pngTexture2 = null;
@@ -51,7 +51,7 @@ private:
 
     // demo stuff
     lightAnnoyingSoundSource = audio.createSource("audio/voltage.wav");
-    audio.playSource(lightAnnoyingSoundSource);
+    lightAnnoyingSoundSource->play();
 
     pngTexture = (TextureResource*) getResourceManager().load("images/TEXTURA.PNG", MimeTypes::TEXTURE);
     pngTexture2 = (TextureResource*) getResourceManager().load("images/CEDFENCE.PNG", MimeTypes::TEXTURE);
@@ -74,17 +74,6 @@ private:
   }
 
   virtual LoopResult doLoop() override {
-
-    /**
-     * Update audio
-     */
-    if (lightAnnoyingSoundSource != null) {
-      lightAnnoyingSoundSource->setPosition(
-          vector3(lightPosition.x, lightPosition.y, -lightPosition.z));
-      audio.updateSource(lightAnnoyingSoundSource);
-      audio.updateListener(viewPosition);
-    }
-
     /**
      * modulate light
      */
@@ -92,8 +81,7 @@ private:
 //        light.setDiffuse(color);
 //        light.setSpecular(color);
 //        light.setAmbient(color);
-    light.setPosition(lightPosition);
-    camera.setPosition(viewPosition);
+
 
     /**
      * Render toon objects
@@ -145,12 +133,36 @@ private:
   void onMouseWheel(int wheel) override {
     *currentPosition += vector(0.0f, 0.0f, wheel);
     logger->verbose("%s", (*currentPosition).toString().c_str());
+
+    /**
+     * Update positions
+     */
+    if (lightAnnoyingSoundSource) {
+      lightAnnoyingSoundSource->setPosition(vector3(lightPosition.x, lightPosition.y, -lightPosition.z));
+      audio.updateListener(viewPosition);
+    }
+
+    light.setPosition(lightPosition);
+    camera.setPosition(viewPosition);
+
   }
 
   virtual void onMouseMove(int x, int y, int dx, int dy, unsigned int buttons)
       override {
     *currentPosition += vector(0.1f * dx, 0.1f * dy, 0);
     logger->verbose("%s", (*currentPosition).toString().c_str());
+
+    /**
+     * Update positions
+     */
+    if (lightAnnoyingSoundSource) {
+      lightAnnoyingSoundSource->setPosition(vector3(lightPosition.x, lightPosition.y, -lightPosition.z));
+      audio.updateListener(viewPosition);
+    }
+
+    light.setPosition(lightPosition);
+    camera.setPosition(viewPosition);
+
   }
   virtual void onKeyUp(unsigned int key, unsigned int keyModifier) override {
     switch (key) {
@@ -181,7 +193,7 @@ public:
   void initializePlayground() override {
     Playground::initializePlayground();
     this->addRunner<OpenGLRunner>();
-    this->addRunner<AudioRunner>();
+    this->addRunner<OpenALRunner>();
     this->addRunner<GeneralDemoRunner>();
   }
 };

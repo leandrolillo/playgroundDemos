@@ -6,6 +6,7 @@
  */
 
 #include "../../base/BaseDemo.h"
+#include <OpenALRunner.h>
 #include <MeshResource.h>
 
 class RoadFighterRunner: public BaseDemoRunner {
@@ -19,7 +20,7 @@ class RoadFighterRunner: public BaseDemoRunner {
   VertexArrayResource *axesVertexArray = null;
 //	TextureResource *texture = null;
 
-  Source *backgroundMusic = null;
+  std::unique_ptr<AudioSource> backgroundMusic;
 
 public:
   using BaseDemoRunner::BaseDemoRunner; //inherit constructors
@@ -83,7 +84,7 @@ public:
     }
 
     backgroundMusic = this->audio.createSource("background.ogg", vector(0, 0, 0), vector(0, 0, 0), true);
-    audio.playSource(backgroundMusic);
+    backgroundMusic->play();
 
     return true;
   }
@@ -122,7 +123,7 @@ public:
   void initializePlayground() override {
     Playground::initializePlayground();
     this->addRunner<OpenGLRunner>();
-    this->addRunner<AudioRunner>();
+    this->addRunner<OpenALRunner>();
     this->addRunner<RoadFighterRunner>();
   }
 };

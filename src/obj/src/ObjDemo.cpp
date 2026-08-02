@@ -9,6 +9,7 @@
 
 #define GL_SILENCE_DEPRECATION
 #include <OpenGLRunner.h>
+#include <OpenALRunner.h>
 #include<renderers/GridRenderer.h>
 
 #include "../../base/BaseDemo.h"
@@ -112,7 +113,7 @@ public:
   void initializePlayground() override {
     Playground::initializePlayground();
     this->addRunner<OpenGLRunner>();
-    this->addRunner<AudioRunner>();
+    this->addRunner<OpenALRunner>();
     this->addRunner<ObjDemoRunner>();
   }
 };

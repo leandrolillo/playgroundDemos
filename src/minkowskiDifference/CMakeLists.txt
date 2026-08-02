@@ -14,6 +14,3 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             ${CMAKE_CURRENT_SOURCE_DIR}/resources
             "${CMAKE_BINARY_DIR}/${MODULE_NAME}/resources")
-
-
-target_link_libraries(${MODULE_NAME} playground openGLRunner audioRunner)
