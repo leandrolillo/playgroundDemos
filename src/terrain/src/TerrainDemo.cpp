@@ -360,10 +360,7 @@ public:
 
 class PlaygroundTerrainDemo: public Playground {
 public:
-  using Playground::Playground;
-
-  void initializePlayground() override {
-    Playground::initializePlayground();
+  PlaygroundTerrainDemo(const String &resourcesBasePath) : Playground(resourcesBasePath) {
     this->addRunner<OpenGLRunner>();
     this->addRunner<OpenALRunner>();
     this->addRunner<PhysicsRunner>();

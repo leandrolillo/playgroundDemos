@@ -109,9 +109,6 @@ class ObjDemoPlayground: public Playground {
 public:
   ObjDemoPlayground(const String &resourcesBasePath) :
       Playground(resourcesBasePath) {
-  }
-  void initializePlayground() override {
-    Playground::initializePlayground();
     this->addRunner<OpenGLRunner>();
     this->addRunner<OpenALRunner>();
     this->addRunner<ObjDemoRunner>();

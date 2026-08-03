@@ -118,10 +118,7 @@ public:
 
 class RoadFighter: public Playground {
 public:
-  using Playground::Playground;
-
-  void initializePlayground() override {
-    Playground::initializePlayground();
+  RoadFighter(const String &resourcesBasePath) : Playground(resourcesBasePath) {
     this->addRunner<OpenGLRunner>();
     this->addRunner<OpenALRunner>();
     this->addRunner<RoadFighterRunner>();

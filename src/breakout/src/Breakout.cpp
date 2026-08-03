@@ -181,10 +181,7 @@ void TransitioningState::onKeyDown(BreakoutRunner &breakoutRunner, unsigned int 
 
 class Breakout: public Playground {
 public:
-  using Playground::Playground; //inherit constructors
-
-  void initializePlayground() override {
-    Playground::initializePlayground();
+  Breakout(const String &resourcesBasePath) : Playground(resourcesBasePath) {
     this->addRunner<OpenGLRunner>();
     this->addRunner<OpenALRunner>();
     this->addRunner<PhysicsRunner>();
