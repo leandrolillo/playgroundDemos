@@ -84,7 +84,7 @@ private:
   /**
    * Playground Stuff
    */
-  PhysicsRunner *physics = nullptr;
+  PhysicsRunner *physics {(PhysicsRunner*) this->getContainer().getRequiredRunner(PhysicsRunner::ID)};
 
   bool debug = false;
 
@@ -124,21 +124,7 @@ private:
   MaterialResource *materials[3] = { &red, &green, &blue };
 
 public:
-  using BaseDemoRunner::BaseDemoRunner; //inherit constructors
-
-  virtual void onResize(unsigned int width, unsigned int height) override {
-    /**
-     * perspective projection zFar needs to be at least the size of skybox hypotenuse (sqrt(skybox size^2 + skybox size^2)
-     */
-    camera.setPerspectiveProjectionFov(45.0, (real) width / (real) height, 0.1, 600.0);
-  }
-
-  virtual bool initialize() override {
-    if (!BaseDemoRunner::initialize()) {
-      return false;
-    }
-
-    physics = (PhysicsRunner*) this->getContainer().getRequiredRunner(PhysicsRunner::ID);
+  TerrainDemoRunner(Playground &container) : BaseDemoRunner(container) {
     physics->getParticleManager().addForce(std::make_unique<Gravity>(vector(0.0, -9.8, 0.0)));
 
     video.enable(VideoAttribute::RELATIVE_MOUSE_MODE);
@@ -146,13 +132,8 @@ public:
 
     treeTexture = (TextureResource*) getResourceManager().load("images/lowPolyTree.png", MimeTypes::TEXTURE);
 
-    /**
-     * If the object has no name in the obj file, we put the filename as the object name, thus we have to request it with a duplicated name.
-     * Review the single object use case to see if there's a better option
-     */
     if ((tree = (VertexArrayResource*) getResourceManager().load("geometry/lowPolyTree.obj/lowPolyTree.obj", MimeTypes::VERTEXARRAY)) == null) {
-      logger->error("Could not load tree model");
-      return false;
+      throw std::runtime_error("Could not load tree model");
     }
 
     terrain = (TerrainResource*) getResourceManager().load("geometry/terrain/terrain.json", "video/terrain");
@@ -169,17 +150,10 @@ public:
     terrainRenderer.addTerrain(vector(0, 0, -terrain->getHeightMap()->getDepth()), terrain);
     terrainRenderer.addTerrain(vector(-terrain->getHeightMap()->getWidth(), 0, -terrain->getHeightMap()->getDepth()), terrain);
 
-    /**
-     * Setup terrain hierarchical bounding volume - aabbs per heightmap are actually unnecessary since its current intersection test does aabb check as well.
-     */
     HierarchicalGeometry *terrainBoundingVolume =
         (HierarchicalGeometry *)&physics->getParticleManager().addScenery(std::make_unique<HierarchicalGeometry>(
             std::make_unique<AABB>(vector(0, 0, 0),
             vector(terrain->getHeightMap()->getWidth(), terrain->getHeightMap()->getHeight(), terrain->getHeightMap()->getDepth()))));
-
-    vector terrainHalfSizes = vector(terrain->getHeightMap()->getWidth() * 0.5,
-        terrain->getHeightMap()->getHeight() * 0.5,
-        terrain->getHeightMap()->getDepth() * 0.5);
 
     terrainBoundingVolume->addChildren(std::make_unique<HeightMapGeometry>(vector(0, 0, 0), *terrain->getHeightMap()));
     terrainBoundingVolume->addChildren(std::make_unique<HeightMapGeometry>(vector(-terrain->getHeightMap()->getWidth(), 0, 0), *terrain->getHeightMap()));
@@ -188,17 +162,10 @@ public:
 
     skyboxRenderer.setSize(300);
 
-
-    /**
-     * Add bullets to particle manager
-     */
     for (int index = 0; index < numberOfParticles; index++) {
       physics->getParticleManager().addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(vector(0, 0, 0), 0.1))).setStatus(false);
     }
 
-    /**
-     * Add tree positions and bounding boxes
-     */
     for (int index = 0; index < 20; index++) {
       real x = rrand() * terrain->getHeightMap()->getWidth();
       real z = rrand() * terrain->getHeightMap()->getDepth();
@@ -214,7 +181,10 @@ public:
     reset();
 
     logger->info("Done configuring!");
-    return true;
+  }
+
+  virtual void onResize(unsigned int width, unsigned int height) override {
+    camera.setPerspectiveProjectionFov(45.0, (real) width / (real) height, 0.1, 600.0);
   }
 
   void reset() {

@@ -54,12 +54,31 @@ class CollisionDetectionDemoRunner: public BaseDemoRunner {
     ParticleManagerRenderer particleManagerRenderer { defaultRenderer };
 
 public:
-    using BaseDemoRunner::BaseDemoRunner; //inherit constructors
+    CollisionDetectionDemoRunner(Playground &container) : BaseDemoRunner(container) {
+      logger->debug("Setting up video");
+      video.enable(VideoAttribute::BLEND, VideoAttribute::SRC_ALPHA, VideoAttribute::ONE_MINUS_SRC_ALPHA);
 
-//    virtual void onResize(unsigned int width, unsigned int height) override {
-//      camera.setProjectionMatrix(Camera::orthographicProjection(5.0, (double) width / (double) height, -20.0, 100.0));
-//    }
+      collidingParticles.push_back(
+          (SelectableParticle *)&particleManager.addParticle(std::make_unique<SelectableParticle>(std::make_unique<Sphere>(vector(0, 0, 0), (real) 0.5))));
+      collidingParticles.push_back(
+          (SelectableParticle *)&particleManager.addParticle(std::make_unique<SelectableParticle>(std::make_unique<Sphere>(vector(0, 0, 0), (real) 0.5))));
+      collidingParticles.push_back(
+          (SelectableParticle *)&particleManager.addParticle(std::make_unique<SelectableParticle>(std::make_unique<AABB>(vector(0, 0, 0), vector(0.5, 0.5, 0.5)))));
+      collidingParticles.push_back(
+          (SelectableParticle *)&particleManager.addParticle(std::make_unique<SelectableParticle>(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 1, 1)))));
 
+      auto hierarchicalGeometry = std::make_unique<HierarchicalGeometry>(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 0.5, 0.5)));
+      hierarchicalGeometry->addChildren(std::make_unique<Sphere>(vector(-0.5, 0, 0), 0.5));
+      hierarchicalGeometry->addChildren(std::make_unique<Sphere>(vector(0.5, 0, 0), 0.5));
+      collidingParticles.push_back(
+          (SelectableParticle *)&particleManager.addParticle(std::make_unique<SelectableParticle>(std::move(hierarchicalGeometry))));
+
+      particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Plane>(vector(0, 0, 0), vector(0, 1, 0)))).setInverseMass((real)0);
+
+      reset();
+
+      logger->debug("Completed initialization");
+    }
 
     void reset() {
         camera.setViewMatrix(matriz_4x4::traslacion(vector(0.0f, -0.5f, -10.0f)));
@@ -103,47 +122,6 @@ public:
 
         particleManager.detectCollisions();
     }
-
-    bool initialize() override {
-    	BaseDemoRunner::initialize();
-
-      logger->debug("Initializing renderers");
-//	    skyboxRenderer.setSize(200);
-
-      logger->debug("Setting up video");
-      video.enable(VideoAttribute::BLEND, VideoAttribute::SRC_ALPHA, VideoAttribute::ONE_MINUS_SRC_ALPHA);
-
-      /**
-       * Add all particles to particle manager and colliding particles to collidingParticles list for internal management
-       */
-      collidingParticles.push_back(
-          (SelectableParticle *)&particleManager.addParticle(std::make_unique<SelectableParticle>(std::make_unique<Sphere>(vector(0, 0, 0), (real) 0.5))));
-      collidingParticles.push_back(
-          (SelectableParticle *)&particleManager.addParticle(std::make_unique<SelectableParticle>(std::make_unique<Sphere>(vector(0, 0, 0), (real) 0.5))));
-      collidingParticles.push_back(
-          (SelectableParticle *)&particleManager.addParticle(std::make_unique<SelectableParticle>(std::make_unique<AABB>(vector(0, 0, 0), vector(0.5, 0.5, 0.5)))));
-      collidingParticles.push_back(
-          (SelectableParticle *)&particleManager.addParticle(std::make_unique<SelectableParticle>(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 1, 1)))));
-
-      auto hierarchicalGeometry = std::make_unique<HierarchicalGeometry>(std::make_unique<AABB>(vector(0, 0, 0), vector(1, 0.5, 0.5)));
-      hierarchicalGeometry->addChildren(std::make_unique<Sphere>(vector(-0.5, 0, 0), 0.5));
-      hierarchicalGeometry->addChildren(std::make_unique<Sphere>(vector(0.5, 0, 0), 0.5));
-      collidingParticles.push_back(
-          (SelectableParticle *)&particleManager.addParticle(std::make_unique<SelectableParticle>(std::move(hierarchicalGeometry))));
-
-      particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Plane>(vector(0, 0, 0), vector(0, 1, 0)))).setInverseMass((real)0);
-
-
-//        collidingParticles.push_back(std::unique_ptr<CollidingParticle>(new CameraParticle(anotherCamera)));
-//        particleManager.addParticle(collidingParticles.back().get());
-
-
-      reset();
-
-      logger->debug("Completed initialization");
-      return true;
-    }
-
 
     LoopResult doLoop() override {
       defaultRenderer.drawAxes(matriz_4x4::identidad);

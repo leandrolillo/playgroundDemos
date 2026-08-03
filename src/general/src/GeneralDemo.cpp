@@ -38,18 +38,7 @@ private:
   DefaultRenderer toonRenderer { video };
   public:
 
-  using BaseDemoRunner::BaseDemoRunner; //inherit constructors
-
-  void reset() {
-    viewPosition = vector(0.0, 0.0f, 6.0);
-    lightPosition = vector(0.0, 0.0, 0.0);
-    camera.setPosition(viewPosition);
-  }
-
-  virtual bool initialize() override {
-    BaseDemoRunner::initialize();
-
-    // demo stuff
+  GeneralDemoRunner(Playground &container) : BaseDemoRunner(container) {
     lightAnnoyingSoundSource = audio.createSource("audio/voltage.wav");
     lightAnnoyingSoundSource->play();
 
@@ -61,8 +50,6 @@ private:
     triangleVertexArray = (VertexArrayResource*) getResourceManager().load("geometry/triangle.json", MimeTypes::VERTEXARRAY);
 
     defaultRenderer.setLight(&light);
-//        defaultRenderer.setMaterial(&material);
-//        defaultRenderer.setTexture(pngTexture);
 
     toonRenderer.setShaderProgram((ShaderProgramResource*) getResourceManager().load("shaders/toon.330.program.json", MimeTypes::SHADERPROGRAM));
     toonRenderer.setLight(&light);
@@ -70,7 +57,12 @@ private:
     toonRenderer.setTexture(pngTexture);
 
     reset();
-    return true;
+  }
+
+  void reset() {
+    viewPosition = vector(0.0, 0.0f, 6.0);
+    lightPosition = vector(0.0, 0.0, 0.0);
+    camera.setPosition(viewPosition);
   }
 
   virtual LoopResult doLoop() override {

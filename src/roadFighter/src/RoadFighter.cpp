@@ -23,70 +23,26 @@ class RoadFighterRunner: public BaseDemoRunner {
   std::unique_ptr<AudioSource> backgroundMusic;
 
 public:
-  using BaseDemoRunner::BaseDemoRunner; //inherit constructors
-
-  bool initialize() override {
-    if (!BaseDemoRunner::initialize()) {
-      return false;
-    }
+  RoadFighterRunner(Playground &container) : BaseDemoRunner(container) {
     defaultRenderer.disableBlending();
 
-    //video.enable(VideoAttribute::CULL_FACE, VideoAttribute::NONE);
-
-    /*
-     * There are the following scenarios:
-     * obj -> mesh
-     * obj -> vertex array
-     * json -> mesh
-     * json -> vertex array
-     */
-
-//        if((axesVertexArray = (VertexArrayResource *)this->getResourceManager().load("roadFighter/axes.obj", MimeTypes::VERTEXARRAY)) == null) {
-//        	logger->error("Could not load axes model");
-//        	return false;
-//        }
-//
-//        if((carVertexArray = (VertexArrayResource *)this->getResourceManager().load("roadFighter/corvette.obj", MimeTypes::VERTEXARRAY)) == null) {
-//        	logger->error("Could not load car model");
-//        	return false;
-//        }
-//    	MeshCollection *meshCollection;
-//
-//        if((meshCollection = (MeshResource *)this->getResourceManager().load("roadFighter/axes.obj",
-//        		MimeTypes::MESHCOLLECTION,
-//				std::set<String> {},
-//				std::map<String, String> {{"texture-filter", "nearest"}})) == null) {
-//        	logger->error("Could not load mesh collection");
-//        	return false;
-//        }
     if ((carMesh = (MeshResource*) this->getResourceManager().load("corvette.obj/chevrolet_corvete", MimeTypes::MESH,
         std::set<String> { }, std::map<String, String> { { "texture-filter", "nearest" } })) == null) {
-      logger->error("Could not load car mesh");
-      return false;
-    } else {
-      logger->info("Loaded car Mesh");
+      throw std::runtime_error("Could not load car mesh");
     }
 
     if ((texturedBoxMesh = (MeshResource*) this->getResourceManager().load("texturedCube.obj/Cube", MimeTypes::MESH,
         std::set<String> { }, std::map<String, String> { { "texture-filter", "nearest" } })) == null) {
-      logger->error("Could not load textured box mesh");
-      return false;
-    } else {
-      logger->info("Loaded car Box Mesh");
+      throw std::runtime_error("Could not load textured box mesh");
     }
 
     if ((axesMesh = (MeshResource*) this->getResourceManager().load("axes.obj/Axes", MimeTypes::MESH,
         std::set<String> { }, std::map<String, String> { { "texture-filter", "nearest" } })) == null) {
-      logger->error("Could not load axes model");
-      return false;
-    } else {
-      logger->info("Loaded Axes");
+      throw std::runtime_error("Could not load axes model");
     }
 
     backgroundMusic = this->audio.createSource("background.ogg", vector(0, 0, 0), vector(0, 0, 0), true);
     backgroundMusic->play();
-
-    return true;
   }
 
   LoopResult doLoop() override {

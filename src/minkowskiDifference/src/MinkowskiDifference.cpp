@@ -67,20 +67,10 @@ class MinkowskiDifferenceRunner: public BaseDemoRunner {
 
 public:
 
-  using BaseDemoRunner::BaseDemoRunner; //inherit constructors
-
-  bool initialize() override {
-    if (!BaseDemoRunner::initialize()) {
-      return false;
-    }
-
+  MinkowskiDifferenceRunner(Playground &container) : BaseDemoRunner(container) {
     video.enable(VideoAttribute::BLEND, VideoAttribute::SRC_ALPHA, VideoAttribute::ONE_MINUS_SRC_ALPHA);
-
     reset();
-
-    return true;
   }
-
 
   bool reset() {
     camera.setPosition(vector(0, 0, 2));

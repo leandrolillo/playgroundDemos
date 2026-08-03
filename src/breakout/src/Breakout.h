@@ -120,16 +120,8 @@ class BreakoutRunner: public BaseDemoRunner {
 
 public:
   BreakoutRunner(Playground &container) : BaseDemoRunner(container) {
-    setState(std::make_unique<MenuState>(false));
-  }
-
-  bool initialize() override {
-    if (!BaseDemoRunner::initialize()) {
-      return false;
-    }
-
     video.enable(VideoAttribute::RELATIVE_MOUSE_MODE);
-    video.enable(VideoAttribute::BLEND, VideoAttribute::SRC_ALPHA, VideoAttribute::ONE_MINUS_SRC_ALPHA);//this should be part of the renderer?
+    video.enable(VideoAttribute::BLEND, VideoAttribute::SRC_ALPHA, VideoAttribute::ONE_MINUS_SRC_ALPHA);
 
     this->getResourceManager().addAdapter<BreakoutLevelAdapter>();
 
@@ -142,7 +134,6 @@ public:
         [this](GeometryContact &contact) {
                   this->livesLeft--;
                   if(livesLeft <= 0) {
-                    //this->exit();
                     this->setState(std::make_unique<TransitioningState>("You died", 10.0f, std::make_unique<MenuState>(false)));
                   } else {
                     this->setState(std::make_unique<TransitioningState>("Some message making fun of you lack of spatial perception!", 10.0f, std::make_unique<StandByState>(level.getName())));
@@ -157,12 +148,10 @@ public:
         [this]() {
           String nextLevel;
 
-          //Find current level in array
           auto it = std::find(levelNames.begin(), levelNames.end(), level.getName());
           if (it != levelNames.end()) {
             auto nextIt = std::next(it);
 
-            // If it was the last element, wrap around to beginning
             if (nextIt == levelNames.end()) {
               nextLevel = levelNames.front();
             } else {
@@ -177,24 +166,12 @@ public:
           }
         });
 
-//    /**
-//     * Debug font textures
-//     */
-//    font = (FontResource *)resourceManager.load("core/NewYork.ttf");
-//    font->setTextureAtlas(background.getTexture());
-//
-//    background.setTexture(textRenderer.getDefaultFont()->getTextureAtlas());
     textRenderer.initialize();
-
-
     textRenderer.print("This is some beautiful text with lots of letters, no question gathered per now!", vector2(0, 100));
 
-    //reset();
-
     camera.setPosition(vector(0, 0, 0));
-    //this->syncBallWithPaddle();
 
-    return true;
+    setState(std::make_unique<MenuState>(false));
   }
 
   virtual void onResize(unsigned int width, unsigned int height) override {

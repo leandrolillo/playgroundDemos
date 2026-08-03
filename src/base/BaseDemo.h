@@ -33,6 +33,13 @@ protected:
     defaultRenderer(video)
   {
     logger->addAppender(LoggerFactory::getAppender("stdout"));
+
+    this->video.resize(800, 600);
+    camera.setViewMatrix(matriz_4x4::traslacion(vector(0.0f, -0.5f, -10.0f)));
+    video.setClearColor(0.0, 0.5, 0.0, 0.0);
+    video.enable(VideoAttribute::DEPTH_TEST);
+    video.enable(VideoAttribute::CULL_FACE, VideoAttribute::BACK);
+    video.enable(VideoAttribute::BLEND, VideoAttribute::SRC_ALPHA, VideoAttribute::ONE_MINUS_SRC_ALPHA);
   }
 
   virtual unsigned char getId() const override {
@@ -53,22 +60,6 @@ protected:
 
   virtual void onResize(unsigned int width, unsigned int height) override {
     camera.setPerspectiveProjectionFov(45.0, (real) width / (real) height, 2, 300.0);
-  }
-
-  virtual bool initialize() override {
-    this->video.resize(800, 600);
-    
-    camera.setViewMatrix(matriz_4x4::traslacion(vector(0.0f, -0.5f, -10.0f)));
-
-    //logger->debug("Setting up video %d", video);
-    video.setClearColor(0.0, 0.5, 0.0, 0.0);
-    video.enable(VideoAttribute::DEPTH_TEST);
-    video.enable(VideoAttribute::CULL_FACE, VideoAttribute::BACK);
-    video.enable(VideoAttribute::BLEND, VideoAttribute::SRC_ALPHA, VideoAttribute::ONE_MINUS_SRC_ALPHA);
-
-    logger->debug("Completed initialization");
-
-    return true;
   }
 
   virtual void beforeLoop() override {
