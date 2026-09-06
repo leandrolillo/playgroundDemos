@@ -4,4 +4,4 @@ target_include_directories(${MODULE_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/
 
 add_subdirectory(adapters)
 
-target_sources(${MODULE_NAME} PUBLIC Breakout.cpp)
+target_sources(${MODULE_NAME} PUBLIC Breakout.cpp BreakoutStates.cpp)

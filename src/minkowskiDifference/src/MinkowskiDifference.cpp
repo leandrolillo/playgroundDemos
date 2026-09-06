@@ -67,20 +67,10 @@ class MinkowskiDifferenceRunner: public BaseDemoRunner {
 
 public:
 
-  using BaseDemoRunner::BaseDemoRunner; //inherit constructors
-
-  bool initialize() override {
-    if (!BaseDemoRunner::initialize()) {
-      return false;
-    }
-
+  MinkowskiDifferenceRunner(Playground &container) : BaseDemoRunner(container) {
     video.enable(VideoAttribute::BLEND, VideoAttribute::SRC_ALPHA, VideoAttribute::ONE_MINUS_SRC_ALPHA);
-
     reset();
-
-    return true;
   }
-
 
   bool reset() {
     camera.setPosition(vector(0, 0, 2));
@@ -225,21 +215,16 @@ public:
     case SDLK_BACKSPACE:
         reset();
         break;
-      default:
-        BaseDemoRunner::onKeyUp(key, keyModifier);
-        break;
+    default:
+      BaseDemoRunner::onKeyDown(key, keyModifier);
+      break;
     }
   }
-
-
 };
 
 class MinkowskiDifference: public Playground {
 public:
-  using Playground::Playground;
-
-  void initializePlayground() override {
-    Playground::initializePlayground();
+  MinkowskiDifference(const String &resourcesBasePath) : Playground(resourcesBasePath) {
     this->addRunner<OpenGLRunner>();
     this->addRunner<OpenALRunner>();
     this->addRunner<MinkowskiDifferenceRunner>();

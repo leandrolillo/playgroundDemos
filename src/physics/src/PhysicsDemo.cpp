@@ -43,7 +43,7 @@ public:
 };
 
 class PhysicsDemoRunner: public BaseDemoRunner {
-  PhysicsRunner *physics = null;
+  PhysicsRunner *physics {(PhysicsRunner*) this->getContainer().getRequiredRunner(PhysicsRunner::ID)};
 
   /**
    * This demo stuff
@@ -90,14 +90,7 @@ class PhysicsDemoRunner: public BaseDemoRunner {
 
   public:
 
-  using BaseDemoRunner::BaseDemoRunner; //inherit constructors
-
-  bool initialize() override {
-    BaseDemoRunner::initialize();
-
-    physics = (PhysicsRunner*) this->getContainer().getRequiredRunner(PhysicsRunner::ID);
-    //physics->setPlaybackSpeed(0.3);
-
+  PhysicsDemoRunner(Playground &container) : BaseDemoRunner(container) {
     gunshotSource = audio.createSource("audio/handgunfire.wav", vector(0, 0, 0), vector(0, 0, 0), false);
     bounceSource = audio.createSource("audio/twang3.wav", vector(0, 0, 0), vector(0, 0, 0), false);
 
@@ -109,31 +102,21 @@ class PhysicsDemoRunner: public BaseDemoRunner {
     defaultRenderer.setLight(&light);
 
     ParticleManager &particleManager = physics->getParticleManager();
-    /*There is currently a bug that makes the order on which we add t
-     * he particles matter*/
 
-
-    /*spherical platform*/
     spherePlatform = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(vector(0.0, 0.0, 0.0), 0.1)));
     spherePlatform->setInverseMass(0.0);
 
-    /*rectangular platform*/
     aabbPlatform = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(vector(0.0, 1.0, 0.0), vector(0.5, 0.05, 0.05))));
     aabbPlatform->setInverseMass(0.0);
 
-    /*Ground*/
     particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Plane>(vector(0, 0, 0), vector(0, 1, 0)))).setInverseMass(0.0);
 
     particleManager.addForce(std::make_unique<Gravity>(vector(0.0, -9.8, 0.0)));
-
-    /*Troubleshooting aabb sphere*/
-
 
     real height = 9;
     real width = 9;
     real wall_depth = 1;
     real wall_half_depth = wall_depth * 0.5;
-    /*Level limits*/
     top = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(breakoutPosition + vector(0, height * 0.5, 0), vector(width * 0.5 - wall_half_depth, wall_half_depth, wall_half_depth)))).setInverseMass(0);
     bottom = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(breakoutPosition + vector(0, height * -0.5, 0), vector(width * 0.5 - wall_half_depth, wall_half_depth, wall_half_depth)))).setInverseMass(0);
     left = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<AABB>(breakoutPosition + vector(width * -0.5, 0, 0), vector(wall_half_depth, height * 0.5 - wall_half_depth, wall_half_depth)))).setInverseMass(0);
@@ -148,10 +131,7 @@ class PhysicsDemoRunner: public BaseDemoRunner {
 
     ball = &particleManager.addParticle(std::make_unique<Particle>(std::make_unique<Sphere>(breakoutPosition, 0.1)));
 
-
     reset();
-
-    return true;
   }
 
   void reset() {
@@ -308,16 +288,16 @@ class PhysicsDemoRunner: public BaseDemoRunner {
     case SDLK_SPACE:
       reset();
       break;
+    default:
+      BaseDemoRunner::onKeyDown(key, keyModifier);
+      break;
     }
   }
 };
 
 class PhysicsPlayground: public Playground {
 public:
-  using Playground::Playground; //inherit constructors
-
-  void initializePlayground() override {
-    Playground::initializePlayground();
+  PhysicsPlayground(const String &resourcesBasePath) : Playground(resourcesBasePath) {
     this->addRunner<OpenGLRunner>();
     this->addRunner<OpenALRunner>();
     this->addRunner<PhysicsRunner>();
