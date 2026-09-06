@@ -324,6 +324,10 @@ public:
     case SDLK_LEFT:
       physics->step(-0.01f);
       break;
+    default:
+      BaseDemoRunner::onKeyDown(key, keyModifier);
+      break;
+
     }
   }
 };

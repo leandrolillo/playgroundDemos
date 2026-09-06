@@ -12,6 +12,7 @@
 #include "BreakoutLevelAdapter.h"
 #include "SpriteRenderer.h"
 #include "TextRenderer.h"
+#include "BreakoutStates.h"
 
 constexpr real zMin = -1;
 constexpr real zMax = 1;
@@ -26,80 +27,11 @@ constexpr real PADDLE_VELOCITY = 300.0; //pixels per second
 constexpr real PADDLE_WIDTH = 60;
 constexpr real PADDLE_HEIGHT = 10;
 
-class BreakoutRunner;
-
-class BreakoutState {
-public:
-  virtual void enter(BreakoutRunner &breakoutRunner){}
-  virtual void update(BreakoutRunner &breakoutRunner) {}
-  virtual void onKeyUp(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) {}
-  virtual void onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) {}
-  virtual ~BreakoutState() {}
-};
-
-
-/**
- * Game states:
- * - Menu
- *    - welcome (new game / exit). No "continue" option. Escape exits the game. New game -> standby at level 0
- *    - paused (similar to welcome but with additional continue option). Continue (or ESC key) go back to previous {playing or standby}
- * - standby (ball is on paddle, label with current level. Can move paddle with arrows. Can launch ball with space)
- * - playing (playing ball. Escape goes to menu)
- * - transitioning state (display message, timeout based, with pointer to next state. Any key to continue)
- */
-class MenuState : public BreakoutState {
-  int currentSelection = 0;
-  bool withContinue;
-  std::vector<String>options;
-public:
-  MenuState(bool withContinue) : withContinue(withContinue) {
-    if(withContinue) {
-      options = {"New Game", "Continue", "Exit"};
-    } else {
-      options = {"New Game", "Exit"};
-    }
-  }
-
-  void enter(BreakoutRunner &runner) override;
-  void update(BreakoutRunner &breakoutRunner) override;
-  void onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) override;
-};
-
-class StandByState : public BreakoutState {
-  String levelName;
-  bool forceLoad;
-public:
-  StandByState(const String &levelName, bool forceLoad = false) : levelName(levelName), forceLoad(forceLoad) {
-  }
-
-  void enter(BreakoutRunner &runner) override;
-  void update(BreakoutRunner &breakoutRunner) override;
-  void onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) override;
-  void onKeyUp(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) override;
-};
-
-class PlayingState : public BreakoutState {
-public:
-  void enter(BreakoutRunner &runner) override;
-  void onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) override;
-  void onKeyUp(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) override;
-};
-
-class TransitioningState : public BreakoutState {
-  String message;
-  real timeout;
-  real elapsedTime=0;
-  std::unique_ptr<BreakoutState> nextState;
-public:
-  TransitioningState(const String &message, real timeout, std::unique_ptr<BreakoutState> nextState) : message(message), timeout(timeout), nextState(std::move(nextState)) {
-  }
-  void enter(BreakoutRunner &runner) override;
-  void update(BreakoutRunner &breakoutRunner) override;
-  void onKeyDown(BreakoutRunner &breakoutRunner, unsigned int key, unsigned int keyModifier) override;
-};
-
-
 class BreakoutRunner: public BaseDemoRunner {
+
+  std::vector<String> levelNames = { "Level-0.json", "Level-1.json", "Level-2.json"};
+  std::vector<String> softThemes = {"audio/forest.ogg", "audio/PathToLakeLand.ogg", "audio/the_field_of_dreams.mp3" };
+  std::vector<String> dynamicThemes = {"audio/awesomeness.wav", "audio/background.ogg", "audio/CyberpunkMoonlightSonata.mp3", "audio/song18.mp3"};
 
   SpriteRenderer spriteRenderer { video };
   TextRenderer textRenderer { video };
@@ -110,13 +42,16 @@ class BreakoutRunner: public BaseDemoRunner {
   Border border { resourceManager, physics->getParticleManager(), DEPTH};
   Paddle paddle { resourceManager, physics->getParticleManager(), PADDLE_WIDTH, PADDLE_HEIGHT, DEPTH};
   Ball ball { resourceManager, physics->getParticleManager(), 10 };
-  std::vector<String> levelNames = { "Level-0.json", "Level-1.json", "Level-2.json"};
   Level level { levelNames[0], resourceManager, physics->getParticleManager(), DEPTH};
 
   FontResource *font = null;
   std::unique_ptr<BreakoutState> state;
 
   unsigned short livesLeft = 3;
+
+
+  std::vector<std::unique_ptr<AudioSource>> softBackgroundMusic;
+  std::vector<std::unique_ptr<AudioSource>> dynamicBackgroundMusic;
 
 public:
   BreakoutRunner(Playground &container) : BaseDemoRunner(container) {
@@ -168,6 +103,20 @@ public:
 
     textRenderer.initialize();
     textRenderer.print("This is some beautiful text with lots of letters, no question gathered per now!", vector2(0, 100));
+
+    for( auto &audioResourceName : softThemes ) {
+      auto audioResource = audio.createSource(audioResourceName);
+      if(audioResource) {
+        softBackgroundMusic.emplace_back(std::move(audioResource));
+      }
+    }
+
+    for( auto &audioResourceName : dynamicThemes ) {
+      auto audioResource = audio.createSource(audioResourceName);
+      if(audioResource) {
+        dynamicBackgroundMusic.emplace_back(std::move(audioResource));
+      }
+    }
 
     camera.setPosition(vector(0, 0, 0));
 
@@ -246,11 +195,15 @@ public:
   //  }
 
   virtual void onKeyUp(unsigned int key, unsigned int keyModifier) override {
-    state->onKeyUp(*this, key, keyModifier);
+    if(!state->onKeyUp(*this, key, keyModifier)) {
+      BaseDemoRunner::onKeyUp(key, keyModifier);
+    }
   }
 
   virtual void onKeyDown(unsigned int key, unsigned int keyModifier) override {
-    state->onKeyDown(*this, key, keyModifier);
+    if(!state->onKeyDown(*this, key, keyModifier)) {
+      BaseDemoRunner::onKeyDown(key, keyModifier);
+    }
   }
   virtual void onMouseWheel(int wheel) override {
 
@@ -266,12 +219,34 @@ public:
     this->textRenderer.print(text, position);
   }
 
+  void shuffleSoftBackgroundMusic() {
+    if(!softBackgroundMusic.empty()) {
+      std::uniform_int_distribution<unsigned long> distribution {0, softBackgroundMusic.size() - 1};
+      unsigned long index = distribution(mtRNE);
+      logger->info("Using soft background music [%d]/[%d]", index, softBackgroundMusic.size() - 1);
+
+      softBackgroundMusic.at(index)->play();
+    }
+  }
+
+  void shuffleDynamicBackgroundMusic() {
+    if(!softBackgroundMusic.empty()) {
+      std::uniform_int_distribution<unsigned long> distribution {0, dynamicBackgroundMusic.size() - 1};
+      unsigned long index = distribution(mtRNE);
+      logger->info("Using dynamic background music [%d]/[%d]", index, dynamicBackgroundMusic.size() - 1);
+
+      dynamicBackgroundMusic.at(index)->play();
+    }
+  }
+
   void freeze() {
     this->physics->setEnabled(false);
+    this->shuffleSoftBackgroundMusic();
   }
 
   void unfreeze() {
     this->physics->setEnabled(true);
+    this->shuffleDynamicBackgroundMusic();
   }
 
 //  void standBy() {

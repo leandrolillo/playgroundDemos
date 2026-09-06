@@ -1,5 +1,4 @@
 TODO: 
-
 * DTE: 
   - [x] Pantalla de bienvenida: Breakout - press any key (to start) or escape to exit. 
   - [x] la pelota debería estar sobre el paddle hasta apretar una tecla. Al presionar esa tecla (barra espaciadora) comienza el juego
@@ -16,6 +15,9 @@ TODO:
   - [ ] rebote en paddle
   - [ ] rebote en boundary y cuando se va la pelota
   - [ ] cuando pierde una vida y game over
-  - [ ] música de fondo?
-  
-- [ ] Merge to master and move on to something else.
+  - [ ] música de fondo juego
+  - [ ] música de fondo menú
+
+* Tech Debts
+  - [ ] Review Non template resources life-cycle (Audio Source for example)
+  - [ ] Merge to master and move on to something else.

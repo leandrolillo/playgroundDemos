@@ -288,6 +288,9 @@ class PhysicsDemoRunner: public BaseDemoRunner {
     case SDLK_SPACE:
       reset();
       break;
+    default:
+      BaseDemoRunner::onKeyDown(key, keyModifier);
+      break;
     }
   }
 };

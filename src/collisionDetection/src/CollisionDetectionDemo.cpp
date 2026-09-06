@@ -253,8 +253,9 @@ public:
 					case 'C':
 						anotherCamera.setOrientation(matriz_3x3::matrizRotacion(radian(10 * this->getStopWatch().getElapsedTime()), 0.0, 0.0) * anotherCamera.getOrientation());
 						break;
-
-
+			    default:
+			      BaseDemoRunner::onKeyDown(key, keyModifier);
+			      break;
         }
 //        logger->info("Another camera position: %s - dt: %f", anotherCamera.getPosition().toString().c_str(), this->getStopWatch().getElapsedTime());
 //        logger->debug("Camera position: %s", camera.getPosition().toString().c_str());

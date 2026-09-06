@@ -162,6 +162,9 @@ private:
       case SDLK_LCTRL:
       currentPosition = &viewPosition;
       break;
+      default:
+        BaseDemoRunner::onKeyUp(key, keyModifier);
+      break;
     }
   }
   virtual void onKeyDown(unsigned int key, unsigned int keyModifier) override {
@@ -173,6 +176,8 @@ private:
     case SDLK_SPACE:
       reset();
       break;
+    default:
+      BaseDemoRunner::onKeyDown(key, keyModifier);
     }
   }
 };

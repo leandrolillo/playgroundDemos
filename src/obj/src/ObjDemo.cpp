@@ -89,6 +89,10 @@ public:
     case SDLK_SPACE:
       reset();
       break;
+    default:
+      BaseDemoRunner::onKeyDown(key, keyModifier);
+      break;
+
     }
   }
 };

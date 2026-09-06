@@ -215,13 +215,11 @@ public:
     case SDLK_BACKSPACE:
         reset();
         break;
-      default:
-        BaseDemoRunner::onKeyUp(key, keyModifier);
-        break;
+    default:
+      BaseDemoRunner::onKeyDown(key, keyModifier);
+      break;
     }
   }
-
-
 };
 
 class MinkowskiDifference: public Playground {

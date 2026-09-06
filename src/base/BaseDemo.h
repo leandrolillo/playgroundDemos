@@ -37,9 +37,6 @@ protected:
     this->video.resize(800, 600);
     camera.setViewMatrix(matriz_4x4::traslacion(vector(0.0f, -0.5f, -10.0f)));
     video.setClearColor(0.0, 0.5, 0.0, 0.0);
-    video.enable(VideoAttribute::DEPTH_TEST);
-    video.enable(VideoAttribute::CULL_FACE, VideoAttribute::BACK);
-    video.enable(VideoAttribute::BLEND, VideoAttribute::SRC_ALPHA, VideoAttribute::ONE_MINUS_SRC_ALPHA);
   }
 
   virtual unsigned char getId() const override {
@@ -79,7 +76,35 @@ protected:
 
   //TODO: Remove SDL Macros and include videoRunner.h instead of OpenGLRunner.h
   virtual void onKeyDown(unsigned int key, unsigned int keyModifier) override {
+    logger->debug("Key down: %d", key);
+    logger->debug("KMOD_ALT: %d", keyModifier & SDL_KMOD_ALT);
+    logger->debug("KMOD_ALT: %d", keyModifier & SDL_KMOD_ALT);
+    logger->debug("KMOD_CTRL: %d", keyModifier & SDL_KMOD_CTRL);
+    logger->debug("KMOD_SHIFT: %d", keyModifier & SDL_KMOD_SHIFT);
+    logger->debug("KMOD_GUI: %d", keyModifier & SDL_KMOD_GUI);
+    logger->debug("KMOD_MODE: %d", keyModifier & SDL_KMOD_MODE);
+
     switch (key) {
+    case SDLK_ESCAPE:
+      this->getContainer().stop();
+      break;
+    case SDLK_F4:
+      if (keyModifier & SDL_KMOD_GUI) {
+        this->getContainer().stop();
+      }
+      break;
+    case SDLK_Q:
+      if (keyModifier & SDL_KMOD_ALT) {
+        this->getContainer().stop();
+      }
+      break;
+
+    case SDLK_RETURN:
+      if (keyModifier & SDL_KMOD_GUI) {
+        video.setFullscreen(!video.getFullscreen());
+      }
+      break;
+
     case '+':
       camera.setPosition(camera.getPosition() - vector(0.0, 0.0, 0.1));
       break;
